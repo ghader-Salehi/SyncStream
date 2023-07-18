@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+  syncstream:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: syncstream
+    environment:
+      REDIS_HOST: redis_db
+      MONGO_HOST: mongo_db
+      MONGO_DATABASE_URL: mongodb://mongo_db:27017/syncstream
+      REDIS_DATABASE_URL: redis://redis_db:6379
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+      INIT_WAIT_SEC: 3
+      DOCKER: 1
+
+    volumes:
+      - ./env:/usr/app/env
+    ports:
+      - '3000:3000'
+    links:
+      - redis_db
+      - mongo_db
+    depends_on:
+      - redis_db
+      - mongo_db
+
+  redis_db:
+    image: redis
+    container_name: syncstream_redis
+    healthcheck:
+      test: "redis-cli ping"
+    ports:
+      - '6379:6379'
+    volumes:
+      - db-data-redis:/data
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+
+  mongo_db:
+    # This image automatically creates a replica set required for transactions
+    image: prismagraphql/mongo-single-replica:4.4.3-bionic
+    container_name: syncstream_mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+      INIT_WAIT_SEC: 3
+    ports:
+      - 27017:27017

@@ -1,0 +1,51 @@
+datasource db {
+    provider = "mongodb"
+    url      = env("MONGO_DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  MODERATOR
+  USER
+}
+
+enum RoomType {
+    TEMPORARY
+    PERMANENT
+}
+
+model User {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    email     String   @unique
+    name      String
+    password  String
+    token     Token?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    roomId    String   @unique @db.ObjectId
+    room      Room     @relation(fields: [roomId], references: [id])
+    role      Role 
+}
+
+model Token {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    token     String   @unique
+    userId    String   @unique @db.ObjectId
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user      User     @relation(fields: [userId], references: [id])
+}
+
+model Room {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    name      String   @unique
+    title     String    
+    type      RoomType  
+    adminId   String   
+    users     User[]
+}

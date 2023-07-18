@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"strictFunctionTypes": true,
+		"esModuleInterop": true,
+		"rootDir": "./src" ,
+		"outDir": "./dist" ,
+		"module": "commonjs",
+		"target": "es2016",
+		"moduleResolution": "node",
+		"skipLibCheck": true,
+		"baseUrl": "src"
+	},
+	
+}
