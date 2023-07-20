@@ -1,26 +1,187 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
+import { redisClient } from "../lib/redisClient";
 
+// fetch only permanent rooms
+export const getRooms = async (req: Request, res: Response) => {
+  try {
+    const allRooms = await prisma.room.findMany({
+      include: {
+        users: true, // Include the related users in the response
+      },
+    });
 
-export const getRooms = async(req: Request, res: Response)=>{
-    // fetch only permanent rooms
+    res.status(200).json({
+      status: "success",
+      allRooms,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "failed",
+      message: "server error",
+    });
+  }
 };
 
-export const getRoom = async(req: Request, res: Response)=> {
-    // get a single room by id from db
-}
+export const getRoom = async (req: Request, res: Response) => {
+  try {
+    const roomName = req.query.name as string;
 
-export const createRoom = async(req: Request, res: Response)=>{
-    // check that room does not exist in data base
+    const cachedRoom = await redisClient.get(`room:${roomName}`);
+
+    if (cachedRoom) {
+      res.status(200).json({
+        status: "success",
+        room: JSON.parse(cachedRoom),
+      });
+    } else {
+      const room = await prisma.room.findUnique({
+        where: {
+          name: roomName,
+        },
+        include: {
+          users: true, // Include the related users in the response
+        },
+      });
+
+      if (!room) {
+        return res
+          .status(404)
+          .json({ status: "failed", message: "Room not found." });
+      }
+
+      res.status(200).json({
+        status: "success",
+        room,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: "failed",
+      message: "server error",
+    });
+  }
+};
+
+export const createRoom = async (req, res) => {
+  try {
+    const { name, title, type } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        status: "failed",
+        message: "name cannot be empty",
+      });
+    }
+
+    if (!title) {
+      return res.status(400).json({
+        status: "failed",
+        message: "title cannot be empty",
+      });
+    }
+
+    if (!type) {
+      return res.status(400).json({
+        status: "failed",
+        message: "type cannot be empty",
+      });
+    }
+
     // check that room does not exist in redis
+    if (await redisClient.exists(`room:${name}`)) {
+      console.log("can't create room, already in redis");
 
-    // write is data base if its permanent
-    // else write it in redis
+      return res.status(400).json({
+        status: "failed",
+        message: "room name already exists in redis",
+      });
+    }
+
+    // check that room does not exist in data base
+    const isRoomExist = await prisma.Room.findUnique({
+      where: {
+        name,
+      },
+    });
+
+    if (isRoomExist) {
+      return res.status(400).json({
+        status: "failed",
+        message: "room name already exists",
+      });
+    }
+
+    let returningRoomInResponse;
+
+    // add in redis
+
+    const storingRoomInRedis = {
+      name,
+      title,
+      type,
+      adminId: req.user.id,
+      users: [{ id: req.user.id }],
+    };
+
+    await redisClient.set(`room:${name}`, JSON.stringify(storingRoomInRedis));
+    console.log("New room created in redis:", storingRoomInRedis);
+
+    if (type === "PERMANENT") {
+      // add in db
+      const room = await prisma.Room.create({
+        data: {
+          name,
+          title,
+          type,
+          adminId: req.user.id,
+          users: {
+            connect: [{ id: req.user.id }],
+          },
+        },
+      });
+
+      console.log("New Permanent room created:", room);
+
+      res.status(200).json({
+        status: "successfully premanent room created",
+        room : returningRoomInResponse,
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      storingRoomInRedis,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "failed",
+      message: "server error",
+    });
+    console.log(error);
+  }
 };
-export const updateRoom = async(req: Request, res: Response)=>{
-    // update the room in db
+export const updateRoom = async (req: Request, res: Response) => {
+  // update the room in db
 };
-export const deleteRoom = async(req: Request, res: Response)=>{
+export const deleteRoom = async (req: Request, res: Response) => {
+  try {
+    const roomId = req.params.id as string;
     // delete the room from db
-};
+    const deletedRoom = await prisma.room.delete({
+      where: {
+        id: roomId,
+      },
+    });
 
+    res.status(200).json({
+      status: "success",
+      deletedRoom,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "failed",
+      message: "server error",
+    });
+  }
+};

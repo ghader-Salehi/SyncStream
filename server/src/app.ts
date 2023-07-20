@@ -3,57 +3,55 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import router from "./routes";
 import cors from "cors";
+import { buildRedisClient } from "./lib/redisClient";
 
-const app = express();
-const server = createServer(app);
-const io = new Server(server);
+export async function main() {
+  const app = express();
+  const server = createServer(app);
+  const io = new Server(server);
 
-app.use(express.json());
-app.use(
-  cors({
-    origin: "*",
-  })
-);
+  app.use(express.json());
+  app.use(
+    cors({
+      origin: "*",
+    })
+  );
 
-app.use("/api", router);
+  // create a redis client and connect to redis.
+  await buildRedisClient();
 
-// TODO: replace it with not-found.ts middleware
-app.all("*", (_, res) => {
-  res.status(404).send("Sorry, the route you are going to does not exist");
-});
+  app.use("/api", router);
 
-// Server listening
-app.listen(8080, () => {
-  console.log(`Server is running on 8080`);
-});
-
-// Socket listening
-server.listen(3000, () => {
-  console.log("Socket is listening on 3000");
-});
-
-// socket.io handlers
-io.on("connection", (socket) => {
-  console.log("a user connected", socket.id);
-
-  socket.on("/join", (data) => {
-    
+  // TODO: replace it with not-found.ts middleware
+  app.all("*", (_, res) => {
+    res.status(404).send("Sorry, the route you are going to does not exist");
   });
 
-  socket.on("/auth", (data) => {
-
+  // Server listening
+  app.listen(8080, () => {
+    console.log(`Server is running on 8080`);
   });
 
-
-  socket.on("/req", (data) => {
-
+  // Socket listening
+  server.listen(3030, () => {
+    console.log("Socket is listening on 3030");
   });
 
+  // socket.io handlers
+  io.on("connection", (socket) => {
+    console.log("a user connected", socket.id);
 
-  socket.emit('/sync', 'send some details to users for getting sync');
+    socket.on("/join", (data) => {});
 
-  // remove user from users list
-  socket.on("disconnect", () => {
+    socket.on("/auth", (data) => {});
 
+    socket.on("/req", (data) => {});
+
+    socket.emit("/sync", "send some details to users for getting sync");
+
+    // remove user from users list
+    socket.on("disconnect", () => {});
   });
-});
+}
+
+main();

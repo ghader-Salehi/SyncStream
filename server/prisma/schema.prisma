@@ -28,7 +28,7 @@ model User {
     updatedAt DateTime @updatedAt
     roomId    String   @unique @db.ObjectId
     room      Room     @relation(fields: [roomId], references: [id])
-    role      Role 
+    role      Role?
 }
 
 model Token {

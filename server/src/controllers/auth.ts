@@ -37,7 +37,7 @@ export const register = async (req: Request, res: Response) => {
     if (isEmailExist) {
       return res.status(400).json({
         status: "failed",
-        message: "email already exists, please login",
+        message: "email already exists, please try another email",
       });
     }
 
