@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prisma from "../lib/prisma";
+import prisma from "../lib/prismaClient";
 import { encryptPassword, comparePassword } from "../utils/password";
 import generateToken from "../utils/token";
 

@@ -5,7 +5,7 @@ export let redisClient: redis.RedisClientType<redis.RedisDefaultModules>;
 export async function buildRedisClient(): Promise<void> {
   redisClient = redis.createClient({
     socket: {
-      // make host name dynamic
+      //TODO: make host name dynamic
       host: "localhost",
       port: 6379,
     },
