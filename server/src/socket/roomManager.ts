@@ -6,7 +6,7 @@ enum RoomType {
 }
 
 interface Room {
-  id: string;
+  _id: string;
   name: string;
   title: string;
   type: RoomType;
@@ -17,6 +17,7 @@ interface Room {
 export let rooms: Room[] = [];
 
 export async function start() {
+  // check mongo for rooms list
   const keys = await redisClient.keys("room:*");
   for (const roomKey of keys) {
     const text = await redisClient.get(roomKey);
@@ -28,24 +29,50 @@ export async function start() {
   }
 }
 
-export async function addClient(roomID: string, socket: any) {
-  const foundRoomIndex = rooms.findIndex((r) => r.id === roomID);
+export async function update() {
+  const keys = await redisClient.keys("room:*");
+  const newList = [];
+  for (const roomKey of keys) {
+    const text = await redisClient.get(roomKey);
+    if (!text) {
+      continue;
+    }
+    const room = JSON.parse(text);
+    newList.push(room);
+  }
+
+  rooms = newList;
+}
+
+export function addClient(roomID: string, socket: any): Room[] {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
 
   if (foundRoomIndex !== -1) {
     rooms[foundRoomIndex].users.push(socket);
   }
+
+  return rooms;
 }
 
-export async function removeClient(roomID: string, socket: any) {
-  const foundRoomIndex = rooms.findIndex((r) => r.id === roomID);
+export function removeClient(roomID: string, id: string): Room[] {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
 
   if (foundRoomIndex !== -1) {
-    rooms[foundRoomIndex].users = rooms[foundRoomIndex].users.filter((u) => u.id !== socket.id);
+    rooms[foundRoomIndex].users = rooms[foundRoomIndex].users.filter((u) => u.id !== id);
   }
+
+  return rooms;
 }
 
-export async function isClientExit(roomID: string, socket: any) {
-  const foundRoom = rooms.find((r) => r.id === roomID);
-  const foundUser = foundRoom.users.find((u) => u.id !== socket.id);
-  return !!foundUser;
+export function isClientExit(roomID: string, id: string) {
+  const foundRoom = rooms.find((r) => r._id === roomID);
+
+  if (foundRoom) {
+    const foundUser = foundRoom.users.find((u) => u.id === id);
+    return !!foundUser;
+  }
+
+  console.log("room not found");
+
+  return false;
 }

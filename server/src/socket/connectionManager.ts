@@ -4,10 +4,18 @@ import { Client } from "../models/client";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
+interface IJWTUser {
+  id: string;
+  email: string;
+  name: string;
+  iat: number;
+  exp: number;
+}
+
 export const connections: Client[] = [];
 
-function getUser(token: string): {} | null {
-  let user = {};
+function getUser(token: string): IJWTUser | null {
+  let user = null;
 
   jwt.verify(token, process.env.JWT_SECRET_KEY, async (error, decoded) => {
     if (error) {
@@ -20,39 +28,31 @@ function getUser(token: string): {} | null {
         user = null;
       }
     }
-    
     user = decoded;
   });
 
-  console.log(user);
-  
   return user;
 }
 
 export async function setup() {
   io.on("connection", (socket) => {
-    // TODO: generate a token for every connection
+    // TODO: generate a token for each connection
 
-    const roomID = socket.handshake.query.id;
-    const token = socket.handshake.headers.token;
-    const user = getUser(token);    
+    const roomID: string = socket.handshake.query.id;
+    const token: string = socket.handshake.headers.token;
+    const user: IJWTUser = getUser(token);
+    const userId = user ? user.id : socket.id;
+    const userName = user ? user.name : `user${userId}`;
 
-    if (user) {
-      // get user from token and add it to users list
-      console.log(user);
-      
+    if (!roomManager.isClientExit(roomID, userId)) {
+      socket.join(roomID);
+      const client = new Client(`room:${roomID}`, uuidv4(), socket, user ? token : "");
+      connections.push(client);
+      roomManager.addClient(roomID, socket);
+      console.log(`a user joined in room:${roomID}`);
+      socket.broadcast.to(roomID).emit("/user", `${userName} joined the room`);
     } else {
-      if (!roomManager.isClientExit(roomID, socket)) {
-        socket.join(roomID);
-        const client = new Client(`room ${uuidv4()}`, roomID, socket);
-        connections.push(client);
-        roomManager.addClient(roomID, socket);
-        socket.broadcast.to(roomID).emit("/user", "new user joined to the room");
-      }
-      else {
-        console.log("client already added to room");
-        
-      }
+      console.log(`${userName} already added to the room`);
     }
 
     socket.on("/auth", () => {
@@ -71,8 +71,10 @@ export async function setup() {
     // socket.emit("/chat", "for getting new chats");
 
     // remove user from users list
-    socket.on("disconnect", (socket) => {
-      roomManager.removeClient(roomID, socket);
+    socket.on("disconnect", () => {
+      roomManager.removeClient(roomID, userId);
+      socket.broadcast.to(roomID).emit("/user", `${userName} left the room`);
+      console.log(`a user left the room:${roomID}`);
     });
   });
 }

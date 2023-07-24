@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../lib/prismaClient";
 import { redisClient } from "../lib/redisClient";
 import { ObjectId } from "mongodb";
+import * as roomManager from "../socket/roomManager"
 
 // fetch only permanent rooms
 export const getRooms = async (req: Request, res: Response) => {
@@ -118,12 +119,13 @@ export const createRoom = async (req, res) => {
     let returningRoom;
 
     const storingRoomInRedis = {
-      id: newRoomId.toString(),
+      _id: newRoomId.toString(),
       name,
       title,
       type,
       adminId: req.user.id,
-      users: [{ id: req.user.id }],
+      // users: [{ id: req.user.id }],
+      users : []
     };
 
     await redisClient.set(`room:${newRoomId.toString()}`, JSON.stringify(storingRoomInRedis));
@@ -139,9 +141,9 @@ export const createRoom = async (req, res) => {
           title,
           type,
           adminId: req.user.id,
-          users: {
-            connect: [{ id: req.user.id }],
-          },
+          // users: {
+          //   connect: [{ id: req.user.id }],
+          // },
         },
       });
 
@@ -149,6 +151,8 @@ export const createRoom = async (req, res) => {
 
       returningRoom = room;
     }
+
+    await roomManager.update();
 
     res.status(200).json({
       status: "success",
