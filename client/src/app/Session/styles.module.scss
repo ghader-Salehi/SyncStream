@@ -1,0 +1,19 @@
+.session {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .content {
+    display: flex;
+    justify-content: space-between;
+
+    .video {
+    }
+
+    .box {
+    }
+  }
+
+  .details {
+  }
+}
