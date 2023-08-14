@@ -1,17 +1,19 @@
 import { axiosWithAuth } from "./index";
 
+const API_BASE = "/api/room";
+
 export async function createRoom(data: any) {
-  return await axiosWithAuth.post("/create", data);
+  return await axiosWithAuth.post(API_BASE + "/create", data);
 }
 
 export async function getRooms(id: string) {
-  return await axiosWithAuth.get(`/${id}`);
+  return await axiosWithAuth.get(API_BASE + `/${id}`);
 }
 
 export async function updateRoom(id: string, data: any) {
-  return await axiosWithAuth.get(`/${id}`, data);
+  return await axiosWithAuth.get(API_BASE + `/${id}`, data);
 }
 
 export async function deleteRoom(id: string) {
-  return await axiosWithAuth.delete(`/${id}`);
+  return await axiosWithAuth.delete(API_BASE + `/${id}`);
 }
