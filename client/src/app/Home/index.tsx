@@ -1,5 +1,7 @@
 import { FunctionComponent } from "react";
 import { useNavigate } from "react-router-dom";
+import { createRoom } from "api/room";
+import { v4 as uuid } from 'uuid';
 
 import styles from "./styles.module.scss";
 interface HomeProps {}
@@ -7,9 +9,22 @@ interface HomeProps {}
 const Home: FunctionComponent<HomeProps> = () => {
   const navigate = useNavigate();
   
-    const handleCreateTemporaryRoom = () => {
-      // generate a room, get its id then redirect to session
-      navigate("/session/14")
+    const handleCreateTemporaryRoom = async () => {
+      try {
+        const dataObj = {
+          name : "Room " + uuid(),
+          title : "title",
+          type : "TEMPORARY"
+      }
+        console.log("🚀 ~ file: index.tsx:19 ~ handleCreateTemporaryRoom ~ dataObj:", dataObj)
+
+        const res = await createRoom(dataObj);
+
+        navigate(`/session/${res.data.room._id}`)
+      } catch (error) {
+        console.log(error)
+      }
+
     };
   
   const handleCreatePremanantRoom = () => {

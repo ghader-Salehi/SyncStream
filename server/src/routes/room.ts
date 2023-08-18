@@ -11,7 +11,7 @@ const router = Router();
 
 router.get("/list", checkAuth, getRooms);
 router.get("/:id", checkAuth, getRoom);
-router.post("/create", checkAuth, createRoom);
+router.post("/create", createRoom);
 router.put("/:id", checkAuth, updateRoom);
 router.delete("/:id", checkAuth, deleteRoom);
 

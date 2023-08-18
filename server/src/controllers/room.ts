@@ -123,7 +123,7 @@ export const createRoom = async (req, res) => {
       name,
       title,
       type,
-      adminId: req.user.id,
+      adminId: "",
       // users: [{ id: req.user.id }],
       users : []
     };
@@ -156,7 +156,7 @@ export const createRoom = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      returningRoom,
+      room : returningRoom,
     });
     
 

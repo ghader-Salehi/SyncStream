@@ -59,10 +59,18 @@ export async function setup() {
       // check user auth with recieved token before
     });
 
-    socket.on("/req", () => {
+    socket.on("/req", (data) => {
       // request for changing video status
 
-      socket.emit("/sync", "for making video sync between users");
+      socket.broadcast.to(roomID).emit("/sync", data);
+    });
+
+    socket.on("/set-video", (data) => {
+      // request for changing video status
+      console.log(data);
+      
+
+      socket.broadcast.to(roomID).emit("/get-video", data);
     });
 
     // socket.emit("/sync", "for making video sync between users");
