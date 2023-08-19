@@ -24,6 +24,7 @@
     "redis": "^4.6.7",
     "socket.io": "^4.7.1",
     "ts-node": "^10.9.1",
+    "unique-names-generator": "^4.7.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

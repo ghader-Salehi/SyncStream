@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import prisma from "../lib/prismaClient";
 import { encryptPassword, comparePassword } from "../utils/password";
 import generateToken from "../utils/token";
+import { uniqueNamesGenerator, names } from "unique-names-generator";
+import { v4 as uuid } from "uuid";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -68,7 +70,6 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-
   try {
     const { email, password } = req.body;
     if (!email) {
@@ -138,6 +139,47 @@ export const logout = async (req: Request, res: Response) => {
     res.status(200).json({
       status: "success",
       message: "Logged Out Sucessfully",
+    });
+  } catch (error) {
+    console.info(error.message);
+    res.status(500).json({
+      status: "failed",
+      message: "server error",
+    });
+  }
+};
+
+export const grant = async (req: Request, res: Response) => {
+  try {
+    const header = req.header("Authorization");
+
+    // if token exist return same token
+    if (header) {
+      const [type, token] = header.split(" ");
+
+      if (type === "Bearer" && !!token) {
+        //TODO: check if its not expired
+        res.status(200).json({
+          status: "success",
+          token,
+        });
+      }
+
+      return;
+    }
+    // if not exist generate one
+    const randomUser = {
+      id: uuid(),
+      name: uniqueNamesGenerator({
+        dictionaries: [names],
+        style: "lowerCase",
+      }),
+      email: "",
+    };
+
+    res.status(200).json({
+      status: "success",
+      token: await generateToken.accessToken(randomUser),
     });
   } catch (error) {
     console.info(error.message);

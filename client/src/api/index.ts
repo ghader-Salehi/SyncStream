@@ -1,19 +1,17 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import { REACT_APP_API_URL } from "../config";
 
-let token = "";
+let authToken = "";
+export let axiosWithAuth: AxiosInstance = axios.create({
+  baseURL: REACT_APP_API_URL,
+});
 
-export function setToken(token: string): void {
-  if (token) token = `Bearer ${token}`;
+export function initAxios(token: string): void {
+  if (token) authToken = `Bearer ${token}`;
+
+  axiosWithAuth.interceptors.request.use(config => {
+    config.headers['Authorization'] =  authToken;
+    return config;
+  });
 }
 
-export const axiosWithAuth = axios.create({
-  baseURL: REACT_APP_API_URL,
-  headers: {
-    Authorization: token,
-  },
-});
-
-export const axiosInstance = axios.create({
-  baseURL: REACT_APP_API_URL,
-});
