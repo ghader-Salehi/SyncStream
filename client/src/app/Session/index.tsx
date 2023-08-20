@@ -92,12 +92,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
       socket.on("/sync", (data) => {
         // TODO: set coming data about video (seeker time, playing status)
-        if (data.playing !== undefined) {
+        if (data?.playing !== undefined) {
           console.log("hey playing", data.playing);
 
           videoStore.setVideoState(data.playing);
         }
-        if (data.played !== undefined) {
+        if (data?.played !== undefined) {
           videoStore.setVideoPlayed(data.played);
           playerRef.current?.seekTo(data.played);
         }
@@ -116,13 +116,13 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    socket.emit("/req", {
-      playing: videoStore.playing,
-      played: videoStore.played,
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoStore.playing]);
+  // useEffect(() => {
+  //   socket.emit("/req", {
+  //     playing: videoStore.playing,
+  //     played: videoStore.played,
+  //   });
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [videoStore.playing]);
 
   return (
     <div className={styles.session}>

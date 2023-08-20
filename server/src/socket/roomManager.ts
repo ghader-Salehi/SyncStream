@@ -6,6 +6,10 @@ enum RoomType {
   PERMANENT,
 }
 
+interface VideoInfo {
+  playing: boolean;
+  played: number;
+}
 interface User {
   id: string;
   name: string;
@@ -22,6 +26,7 @@ interface Room {
   title: string;
   type: RoomType;
   adminId: String;
+  info: VideoInfo;
   users: UserSocketConnection[];
 }
 
@@ -86,4 +91,22 @@ export function isClientExit(roomID: string, id: string) {
   console.log("room not found");
 
   return false;
+}
+
+export function updateRoomInfo(roomID: string, info: VideoInfo) {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
+
+  if (foundRoomIndex !== -1) {
+    rooms[foundRoomIndex].info = info;
+  }
+
+  return rooms;
+}
+
+export function getRoomConnections(roomID: string) {
+  const foundRoom = rooms.find((r) => r._id === roomID);
+
+  if (foundRoom) return foundRoom.users;
+
+  return [];
 }
