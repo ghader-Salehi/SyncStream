@@ -1,8 +1,19 @@
 import { redisClient } from "../lib/redisClient";
+import EventEmitter from "events";
 
 enum RoomType {
   TEMPORARY,
   PERMANENT,
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface UserSocketConnection extends User {
+  socket: any;
 }
 
 interface Room {
@@ -11,7 +22,7 @@ interface Room {
   title: string;
   type: RoomType;
   adminId: String;
-  users: any[];
+  users: UserSocketConnection[];
 }
 
 export let rooms: Room[] = [];
@@ -44,11 +55,11 @@ export async function update() {
   rooms = newList;
 }
 
-export function addClient(roomID: string, socket: any): Room[] {
+export function addClient(roomID: string, socket: any, user: User): Room[] {
   const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
 
   if (foundRoomIndex !== -1) {
-    rooms[foundRoomIndex].users.push(socket);
+    rooms[foundRoomIndex].users.push({ socket, ...user });
   }
 
   return rooms;
@@ -58,7 +69,7 @@ export function removeClient(roomID: string, id: string): Room[] {
   const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
 
   if (foundRoomIndex !== -1) {
-    rooms[foundRoomIndex].users = rooms[foundRoomIndex].users.filter((u) => u.id !== id);
+    rooms[foundRoomIndex].users = rooms[foundRoomIndex].users.filter((u) => u.socket?.id !== id);
   }
 
   return rooms;
@@ -68,7 +79,7 @@ export function isClientExit(roomID: string, id: string) {
   const foundRoom = rooms.find((r) => r._id === roomID);
 
   if (foundRoom) {
-    const foundUser = foundRoom.users.find((u) => u.id === id);
+    const foundUser = foundRoom.users.find((u) => u.socket?.id === id);
     return !!foundUser;
   }
 

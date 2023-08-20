@@ -36,20 +36,18 @@ function getUser(token: string): IJWTUser | null {
 
 export async function setup() {
   io.on("connection", (socket) => {
-    // TODO: generate a token for each connection
-
     const roomID: string = socket.handshake.query.id;
-    const token: string = socket.handshake.headers.token;
+    const token: string = socket.handshake.auth.token;
     const user: IJWTUser = getUser(token);
-    const userId = user ? user.id : socket.id;
-    const userName = user ? user.name : `user${userId}`;
+    // const userId = user ? user.id : socket.id;
+    const userName = user.name;
 
-    if (!roomManager.isClientExit(roomID, userId)) {
+    if (!roomManager.isClientExit(roomID, socket.id)) {
       socket.join(roomID);
       const client = new Client(`room:${roomID}`, uuidv4(), socket, user ? token : "");
       connections.push(client);
-      roomManager.addClient(roomID, socket);
-      console.log(`a user joined in room:${roomID}`);
+      roomManager.addClient(roomID, socket, { id: user.id, name: user.name, email: user.email });
+      // console.log(`a user joined in room:${roomID}`);
       socket.broadcast.to(roomID).emit("/user", `${userName} joined the room`);
     } else {
       console.log(`${userName} already added to the room`);
@@ -68,7 +66,6 @@ export async function setup() {
     socket.on("/set-video", (data) => {
       // request for changing video status
       console.log(data);
-      
 
       socket.broadcast.to(roomID).emit("/get-video", data);
     });
@@ -80,7 +77,7 @@ export async function setup() {
 
     // remove user from users list
     socket.on("disconnect", () => {
-      roomManager.removeClient(roomID, userId);
+      roomManager.removeClient(roomID, socket.id);
       socket.broadcast.to(roomID).emit("/user", `${userName} left the room`);
       console.log(`a user left the room:${roomID}`);
     });

@@ -4,10 +4,24 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
-import { initAxios } from "./api";
+import { grant } from "api/auth";
+import { initAxios } from "api";
 
 const token = localStorage.getItem("ss_token");
 if (token) initAxios(token);
+
+const handleGrantUserInfo = async () => {
+  try {
+    const res = await grant();
+    const token = res.data.token;
+    localStorage.setItem("ss_token", token);
+    initAxios(token);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+handleGrantUserInfo();
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(

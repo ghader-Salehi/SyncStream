@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../lib/prismaClient";
 import { encryptPassword, comparePassword } from "../utils/password";
 import generateToken from "../utils/token";
-import { uniqueNamesGenerator, names } from "unique-names-generator";
+import { uniqueNamesGenerator, names, adjectives, NumberDictionary, colors } from "unique-names-generator";
 import { v4 as uuid } from "uuid";
 
 export const register = async (req: Request, res: Response) => {
@@ -171,7 +171,7 @@ export const grant = async (req: Request, res: Response) => {
     const randomUser = {
       id: uuid(),
       name: uniqueNamesGenerator({
-        dictionaries: [names],
+        dictionaries: [adjectives, colors ,names],
         style: "lowerCase",
       }),
       email: "",
