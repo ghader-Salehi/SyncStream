@@ -4,7 +4,7 @@ import Home from "app/Home";
 import Session from "app/Session";
 import Rooms from "app/Rooms";
 import YouTube from "app/YouTube";
-import { VideoInfosStore } from "mobx/videoStrore";
+import { VideoInfosStore } from "mobx/videoStore";
 
 function Main() {
   return (

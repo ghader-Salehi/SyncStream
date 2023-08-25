@@ -8,7 +8,7 @@ import { observer } from "mobx-react-lite";
 
 import styles from "./styles.module.scss";
 import { connectToSocket } from "api/socket";
-import { VideoInfos } from "mobx/videoStrore";
+import { VideoInfos } from "mobx/videoStore";
 
 // interface OnProgressProps {
 //   played: number;
@@ -23,12 +23,34 @@ interface SessionProps {
 
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 
+const formatProgressString = (amountOfSeconds: number) => {
+  const sec_num = parseInt(amountOfSeconds + "", 10);
+  let hours = Math.floor(sec_num / 3600);
+  let minutes = Math.floor((sec_num - hours * 3600) / 60);
+  let seconds = sec_num - hours * 3600 - minutes * 60;
+
+  if (hours < 10) {
+    hours = 0 + hours;
+  }
+  if (minutes < 10) {
+    minutes = 0 + minutes;
+  }
+  if (seconds < 10) {
+    seconds = 0 + seconds;
+  }
+
+  return hours + ":" + minutes + ":" + seconds;
+};
+
 const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const { id } = useParams();
   const [url, setUrl] = useState(videoStore.url);
   const [seeking, setSeeking] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [isMuted, setIsMuted] = useState(true);
+  const [playedSecs, setPlayedSecs] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [boxCurrentTab, setBoxCurrentTab] = useState("users");
 
   const playerRef = useRef<ReactPlayer | null>(null);
 
@@ -39,6 +61,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const handleSeekMouseUp = (e: any) => {
     setSeeking(false);
     const fraction = parseFloat(e.target.value);
+    videoStore.setVideoPlayed(fraction)
     playerRef.current?.seekTo(fraction);
   };
 
@@ -53,7 +76,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fraction = parseFloat(e.target.value);
     videoStore.setVideoPlayed(fraction);
-
+    setPlayedSecs(+e.target.value * duration);
     socket.emit("/req", {
       playing: false,
       played: fraction,
@@ -61,26 +84,6 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
     videoStore.setVideoState(false);
   };
-
-  // const handleSkipForward = () => {
-  //   const currentTime = playerRef.current?.getCurrentTime() || 0;
-  //   playerRef.current?.seekTo(currentTime + 10); // Skip forward by 10 seconds
-
-  //   socket.emit("/req", {
-  //     playing: false,
-  //     played: currentTime + 10,
-  //   });
-  // };
-
-  // const handleSkipBackward = () => {
-  //   const currentTime = playerRef.current?.getCurrentTime() || 0;
-  //   playerRef.current?.seekTo(currentTime - 10);
-
-  //   socket.emit("/req", {
-  //     playing: false,
-  //     played: currentTime - 10,
-  //   });
-  // };
 
   useEffect(() => {
     if (id) {
@@ -91,38 +94,66 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       });
 
       socket.on("/sync", (data) => {
-        // TODO: set coming data about video (seeker time, playing status)
         if (data?.playing !== undefined) {
-          console.log("hey playing", data.playing);
-
           videoStore.setVideoState(data.playing);
         }
         if (data?.played !== undefined) {
           videoStore.setVideoPlayed(data.played);
           playerRef.current?.seekTo(data.played);
+          if (duration) setPlayedSecs(+data.played * duration);
         }
       });
 
-      socket.on("/user", (data) => {
+      socket.on("/left-user", (data) => {
         console.log(data);
         setUsers((prev) => [...prev, { str: data }]);
       });
 
+      socket.on("/join-user", (data) => {
+        setUsers((prev) => [...prev, { str: data }]);
+
+        socket.emit("/req", {
+          playing: videoStore.playing,
+          played: videoStore.played,
+        });
+      });
+
       socket.on("/get-video", (data) => {
         videoStore.setVideoUrl(data.url);
-        setUrl(data.url)
+        setUrl(data.url);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // useEffect(() => {
-  //   socket.emit("/req", {
-  //     playing: videoStore.playing,
-  //     played: videoStore.played,
-  //   });
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [videoStore.playing]);
+  useEffect(() => {
+    if (videoStore.playing) {
+      socket.emit("/req", {
+        playing: videoStore.playing,
+        played: videoStore.played,
+      });
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoStore.playing]);
+
+  useEffect(() => {
+    if (duration) setPlayedSecs(+videoStore.played * duration);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duration]);
+
+  useEffect(()=>{
+    const isBuffering = videoStore.playerCurrentState === "buffering";
+    const internalVideoPlayer = playerRef.current?.getInternalPlayer();
+    const isReady = videoStore.isReady;
+    
+    if(isReady && internalVideoPlayer && !isBuffering){
+      playerRef.current?.seekTo(videoStore.played); 
+      videoStore.setPlayerIsReady(false);
+    }
+  })
+  
+
 
   return (
     <div className={styles.session}>
@@ -136,23 +167,55 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             volume={1}
             muted={isMuted}
             onPlay={() => {
+              if ( !videoStore.playing ) {
+                const test :any = playerRef.current;
+                console.log(test?.player.handlePause);
+                
+              }
               videoStore.setVideoState(true);
+              videoStore.setPlayerCurrentState("playing");
               // if (socket) socket.emit("/req", { playing: true });
             }}
             onPause={() => {
               videoStore.setVideoState(false);
+              videoStore.setPlayerCurrentState("paused");
               // if (socket) socket.emit("/req", { playing: false });
             }}
-            onSeek={(time: number) => {
-              console.log(time);
+            // onSeek={(time: number) => {
+            //   console.log(time);
+            // }}
+            onBuffer={()=>{
+              videoStore.setPlayerCurrentState("buffering");
             }}
             playing={videoStore.playing}
             onProgress={(progress) => {
               if (!seeking) {
                 videoStore.setVideoPlayed(progress.played);
+                setPlayedSecs(progress.playedSeconds);
+
+                // if (
+                //   +progress.playedSeconds.toFixed(0) > 0 &&
+                //   +progress.playedSeconds.toFixed(0) % 5 === 0
+                // ) {
+                //   socket.emit("/req", {
+                //     playing: videoStore.playing,
+                //     played: videoStore.played,
+                //   });
+                // }
               }
             }}
-            playsinline
+            onDuration={(d) => {
+              setDuration(d);
+            }}
+            onReady={(p)=>{
+              console.log("ready")
+              videoStore.setPlayerIsReady(true , p.getCurrentTime());
+            }}
+            config={{
+              youtube: {
+                playerVars: { showinfo: 1 }
+              }
+            }}
           />
 
           <div className={styles.custom_controls}>
@@ -164,6 +227,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             >
               {videoStore.playing ? "Pause" : "Play"}
             </button>
+            <span className={styles.progress_time}>{formatProgressString(playedSecs)}</span>
             <input
               className={styles.seek_bar}
               type="range"
@@ -181,9 +245,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
           </div>
         </div>
         <div className={styles.box}>
-          {users.map((u) => (
-            <div> {u.str} </div>
-          ))}
+          <div className={styles.box_header}>
+            <div onClick={() => setBoxCurrentTab("users")}>Users</div>
+            <div onClick={() => setBoxCurrentTab("chats")}>Chats</div>
+          </div>
+          {boxCurrentTab === "users" ? users.map((u) => <div> {u.str} </div>) : "chats"}
+
           {/* {JSON.stringify(users)} */}
         </div>
       </div>

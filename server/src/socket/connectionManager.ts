@@ -49,12 +49,14 @@ export async function setup() {
       const client = new Client(`room:${roomID}`, uuidv4(), socket, user ? token : "");
       connections.push(client);
       roomManager.addClient(roomID, socket, { id: user.id, name: user.name, email: user.email });
-      socket.broadcast.to(roomID).emit("/user", `${userName} joined the room`);
-      const room = roomManager.rooms.find((r)=> r._id === roomID)
-      socket.emit('/sync', room.info)
+      socket.broadcast.to(roomID).emit("/join-user", `${userName} joined the room`);
     } else {
       console.log(`${userName} already added to the room`);
     }
+    
+    const room = roomManager.rooms.find((r)=> r._id === roomID)
+    // if(room.info)
+    socket.emit('/sync', room.info)
 
     socket.on("/auth", () => {
       // check user auth with recieved token before
@@ -62,6 +64,7 @@ export async function setup() {
 
     socket.on("/req", (data) => {
       // request for changing video status
+      
       roomManager.updateRoomInfo(roomID, data)
 
       socket.broadcast.to(roomID).emit("/sync", data);
@@ -82,7 +85,7 @@ export async function setup() {
     // remove user from users list
     socket.on("disconnect", () => {
       roomManager.removeClient(roomID, socket.id);
-      socket.broadcast.to(roomID).emit("/user", `${userName} left the room`);
+      socket.broadcast.to(roomID).emit("/left-user", `${userName} left the room`);
       console.log(`a user left the room:${roomID}`);
     });
   });
