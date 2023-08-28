@@ -1,0 +1,31 @@
+.youtube {
+  display: flex;
+  flex-direction: column;
+
+  .youtube__search_box{
+    display: flex;
+    width: 100%;
+    margin-top: 24px;
+    justify-content: center;
+  }
+
+  .youtube__list {
+    display: flex;
+    flex-wrap: wrap;
+    
+    .no_data{
+      display: flex;
+      width: 100%;
+      justify-content: center;
+      margin-top: 25px;
+    }
+  }
+
+  .loading_box{
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: 120px;
+  }
+
+}

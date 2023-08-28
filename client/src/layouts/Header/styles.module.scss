@@ -4,15 +4,21 @@
     display: flex;
     justify-content: space-between;
     background-color: rgb(162, 169, 166);
+    box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1);
 
-    .logo {
+    .heading {
         height: 100%;
         display: flex;
         justify-content: center ;
         align-items: center;
-        padding-left: 40px;
-        font-size: 24px;
+        padding-left: 24px;
+        font-size: 22px;
         font-weight: bold;
+        user-select: none;
+
+        .logo{
+            margin-right: 8px;
+        }
     }
 
     .login {
@@ -22,5 +28,11 @@
         align-items: center;
         padding-right: 24px;
         cursor: pointer;
+    }
+
+    .login_btn {
+        color: #1c1c1c;
+        font-weight: bold;
+        font-size: 16px;
     }
 }

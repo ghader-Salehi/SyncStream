@@ -6,8 +6,8 @@ export async function createRoom(data: any) {
   return await axiosWithAuth.post(API_BASE + "/create", data);
 }
 
-export async function getRooms(id: string) {
-  return await axiosWithAuth.get(API_BASE + `/${id}`);
+export async function getRooms() {
+  return await axiosWithAuth.get(API_BASE + `/list`);
 }
 
 export async function updateRoom(id: string, data: any) {

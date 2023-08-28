@@ -4,8 +4,6 @@ import { Client } from "../models/client";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 
-
-
 interface IJWTUser {
   id: string;
   email: string;
@@ -53,10 +51,9 @@ export async function setup() {
     } else {
       console.log(`${userName} already added to the room`);
     }
-    
-    const room = roomManager.rooms.find((r)=> r._id === roomID)
-    // if(room.info)
-    socket.emit('/sync', room.info)
+
+    const room = roomManager.rooms.find((r) => r._id === roomID);
+    if (room?.info) socket.emit("/sync", room.info);
 
     socket.on("/auth", () => {
       // check user auth with recieved token before
@@ -64,8 +61,8 @@ export async function setup() {
 
     socket.on("/req", (data) => {
       // request for changing video status
-      
-      roomManager.updateRoomInfo(roomID, data)
+
+      roomManager.updateRoomInfo(roomID, data);
 
       socket.broadcast.to(roomID).emit("/sync", data);
     });

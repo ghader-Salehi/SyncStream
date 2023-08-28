@@ -1,9 +1,9 @@
 import { makeObservable, observable, action } from "mobx";
 
 export type PlayerState = "paused" | "buffering" | "playing" 
-
+//  https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4
 export class VideoInfos {
-  url: string = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4";
+  url: string = "";
   playing: boolean = false;
   played: number = 0;
   loaded: number = 0;
@@ -27,6 +27,8 @@ export class VideoInfos {
   }
 
   setVideoUrl(url: string) {
+    console.log(url , "url");
+    
     this.url = url;
   }
 
