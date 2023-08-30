@@ -13,6 +13,9 @@
       height: 550px;
       margin: 24px 16px;
       position: relative;
+      background-color: #c5c5c5;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
 
       .custom_controls {
         display: flex;
@@ -20,17 +23,19 @@
         justify-content: center;
         padding: 10px;
         background-color: #333;
+        border-radius: 0 0 12px 12px;
 
         .control_btn {
-          background-color: #007bff;
+          // background-color: #007bff;
           color: #fff;
           border: none;
-          padding: 5px 10px;
+          // padding: 5px 10px;
           margin: 0 5px;
           cursor: pointer;
+          // width: 10px !important;
         }
 
-        .progress_time{
+        .progress_time {
           color: #fff;
           margin: 12px;
         }
@@ -39,8 +44,11 @@
           width: 100%;
           cursor: pointer;
         }
-      }
 
+        .mute_btn {
+          color: #fff;
+        }
+      }
     }
 
     .box {
@@ -49,24 +57,75 @@
       background-color: rgb(197, 197, 197);
       display: flex;
       flex-direction: column;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
 
-      .box_header{
+      .box_header {
         display: flex;
         justify-content: space-between;
+
+        .tab_button {
+          color: #4c4c4c;
+          font-weight: bold;
+        }
+      }
+
+      .users_list {
+        margin: 12px;
+        max-height: 450px;
+        overflow: auto;
+
+        .user {
+          display: flex;
+          width: 100%;
+          margin: 8px 0px;
+        }
       }
     }
   }
 
   .details {
     display: flex;
-    flex-direction: column;
+    // flex-direction: column;
+    align-items: center;
     width: 100%;
     margin-top: 50px;
 
     .url_box {
       display: flex;
       align-items: center;
-      padding: 16px;
+      margin: 16px;
+      padding: 0 16px;
+      background-color: #fff;
+      border-radius: 12px ;
+      // width: 100%;
+
+      .url_box__title{
+        margin-right: 16px;
+      }
+
+      .url_box__input{
+        display: flex;
+        align-items: center;
+        margin-right: 16px;
+
+      }
+
+      .url_box__submit{
+        // color: #000;
+        font-weight: bold;
+      }
+    }
+
+    .get_ready_box {
+      display: flex;
+
+      .get_ready_box__btn{
+        font-weight: bold;
+      }
     }
   }
+
+
 }

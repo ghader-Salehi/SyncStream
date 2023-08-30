@@ -6,6 +6,8 @@ enum RoomType {
   PERMANENT,
 }
 
+export type PlayerState = "paused" | "buffering" | "playing" | "ready" | "unready"
+
 interface VideoInfo {
   playing: boolean;
   played: number;
@@ -14,6 +16,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  state: PlayerState
 }
 
 interface UserSocketConnection extends User {
@@ -25,8 +28,9 @@ interface Room {
   name: string;
   title: string;
   type: RoomType;
-  adminId: String;
+  adminId: string;
   info: VideoInfo;
+  videoUrl : string,
   users: UserSocketConnection[];
 }
 
@@ -103,6 +107,28 @@ export function updateRoomInfo(roomID: string, info: VideoInfo) {
   return rooms;
 }
 
+export function setRoomVideo(roomID: string, url: string) {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
+
+  if (foundRoomIndex !== -1) {
+    rooms[foundRoomIndex].videoUrl = url;
+  }
+
+  return rooms;
+}
+
+export function updateUserState  (roomID: string , socketId: string , state : PlayerState) {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomID);
+
+  if(foundRoomIndex !== -1) {
+    const foundUserIndex = rooms[foundRoomIndex].users.findIndex((u)=> u.socket.id === socketId);
+    if(foundUserIndex !== -1)
+      rooms[foundRoomIndex].users[foundUserIndex].state = state;
+  } 
+
+  return rooms[foundRoomIndex];
+}
+
 export function getRoomConnections(roomID: string) {
   const foundRoom = rooms.find((r) => r._id === roomID);
 
@@ -110,3 +136,4 @@ export function getRoomConnections(roomID: string) {
 
   return [];
 }
+

@@ -3,8 +3,13 @@ import { useParams } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 import ReactPlayer from "react-player";
-
 import { observer } from "mobx-react-lite";
+// MUI Icons
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
+import { Button, IconButton, TextField } from "@mui/material";
 
 import styles from "./styles.module.scss";
 import { connectToSocket } from "api/socket";
@@ -51,6 +56,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const [playedSecs, setPlayedSecs] = useState(0);
   const [duration, setDuration] = useState(0);
   const [boxCurrentTab, setBoxCurrentTab] = useState("users");
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   const playerRef = useRef<ReactPlayer | null>(null);
 
@@ -61,7 +67,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const handleSeekMouseUp = (e: any) => {
     setSeeking(false);
     const fraction = parseFloat(e.target.value);
-    videoStore.setVideoPlayed(fraction)
+    videoStore.setVideoPlayed(fraction);
     playerRef.current?.seekTo(fraction);
   };
 
@@ -85,6 +91,26 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
     videoStore.setVideoState(false);
   };
 
+  // const handleSliderChange = (event: Event, newValue: number | number[]) => {
+  //   videoStore.setVideoPlayed((newValue as number / 100) * duration);
+  //   setPlayedSecs((newValue as number  / 100) * duration);
+  //   playerRef.current?.seekTo((newValue as number  / 100) * duration);
+
+  //   socket.emit("/req", {
+  //     playing: false,
+  //     played: (newValue as number  / 100) * duration,
+  //   });
+
+  //   videoStore.setVideoState(false);
+  // };
+
+  const handleSetUserReady = (ready: boolean) => {
+    if (socket) {
+      socket.emit("/status", { status: ready ? "ready" : "unready" });
+      videoStore.setPlayerIsReady(ready);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       socket = connectToSocket(id);
@@ -106,11 +132,11 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
       socket.on("/left-user", (data) => {
         console.log(data);
-        setUsers((prev) => [...prev, { str: data }]);
+        // setUsers((prev) => [...prev, { str: data }]);
       });
 
       socket.on("/join-user", (data) => {
-        setUsers((prev) => [...prev, { str: data }]);
+        // setUsers((prev) => [...prev, { str: data }]);
 
         socket.emit("/req", {
           playing: videoStore.playing,
@@ -122,6 +148,16 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         videoStore.setVideoUrl(data.url);
         setUrl(data.url);
       });
+
+      socket.on("/users", (data) => {
+        setUsers(data);
+        //  get users last update list
+      });
+
+      // send video url to server when selecting a video from list to watching it in sync
+      if (videoStore.url) {
+        socket.emit("/set-video", { url });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -142,18 +178,16 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
-  useEffect(()=>{
+  useEffect(() => {
     const isBuffering = videoStore.playerCurrentState === "buffering";
     const internalVideoPlayer = playerRef.current?.getInternalPlayer();
-    const isReady = videoStore.isReady;
-    
-    if(isReady && internalVideoPlayer && !isBuffering){
-      playerRef.current?.seekTo(videoStore.played); 
-      videoStore.setPlayerIsReady(false);
-    }
-  })
-  
 
+    if (isPlayerReady && internalVideoPlayer && !isBuffering) {
+      playerRef.current?.seekTo(videoStore.played);
+      // videoStore.setPlayerIsReady(false);
+      setIsPlayerReady(false);
+    }
+  });
 
   return (
     <div className={styles.session}>
@@ -167,25 +201,25 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             volume={1}
             muted={isMuted}
             onPlay={() => {
-              if ( !videoStore.playing ) {
-                const test :any = playerRef.current;
+              if (!videoStore.playing) {
+                const test: any = playerRef.current;
                 console.log(test?.player.handlePause);
-                
               }
               videoStore.setVideoState(true);
               videoStore.setPlayerCurrentState("playing");
-              // if (socket) socket.emit("/req", { playing: true });
+              // if (socket) socket.emit("/status", { status: "playing" });
             }}
             onPause={() => {
               videoStore.setVideoState(false);
               videoStore.setPlayerCurrentState("paused");
-              // if (socket) socket.emit("/req", { playing: false });
+              // if (socket) socket.emit("/status", { status: "paused" });
             }}
             // onSeek={(time: number) => {
             //   console.log(time);
             // }}
-            onBuffer={()=>{
+            onBuffer={() => {
               videoStore.setPlayerCurrentState("buffering");
+              // if (socket) socket.emit("/status", { status: "buffering" });
             }}
             playing={videoStore.playing}
             onProgress={(progress) => {
@@ -207,26 +241,25 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             onDuration={(d) => {
               setDuration(d);
             }}
-            onReady={(p)=>{
-              console.log("ready")
-              videoStore.setPlayerIsReady(true , p.getCurrentTime());
+            onReady={(p) => {
+              setIsPlayerReady(true);
             }}
             config={{
               youtube: {
-                playerVars: { showinfo: 1 }
-              }
+                playerVars: { showinfo: 1 },
+              },
             }}
           />
 
           <div className={styles.custom_controls}>
-            <button
+            <IconButton
               className={styles.control_btn}
               onClick={() => {
                 handlePlayPause(!videoStore.playing);
               }}
             >
-              {videoStore.playing ? "Pause" : "Play"}
-            </button>
+              {videoStore.playing ? <PauseIcon /> : <PlayArrowIcon />}
+            </IconButton>
             <span className={styles.progress_time}>{formatProgressString(playedSecs)}</span>
             <input
               className={styles.seek_bar}
@@ -239,37 +272,84 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               onChange={handleSeekChange}
               onMouseUp={handleSeekMouseUp}
             />
+            {/* <Slider
+              style={{ margin: "0 16px" }}
+              value={(videoStore.played / duration) * 100}
+              onChange={handleSliderChange}
+              onMouseDown={handleSeekMouseDown}
+              onMouseUp={handleSeekMouseUp}
+            /> */}
             {/* <button onClick={handleSkipBackward}>Skip Backward</button>
             <button onClick={handleSkipForward}>Skip Forward</button> */}
-            <button onClick={() => setIsMuted(!isMuted)}>{isMuted ? "Unmute" : "Mute"}</button>
+            <IconButton className={styles.mute_btn} onClick={() => setIsMuted(!isMuted)}>
+              {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+            </IconButton>
           </div>
         </div>
         <div className={styles.box}>
           <div className={styles.box_header}>
-            <div onClick={() => setBoxCurrentTab("users")}>Users</div>
-            <div onClick={() => setBoxCurrentTab("chats")}>Chats</div>
+            <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("users")}>
+              Users
+            </Button>
+            <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("chats")}>
+              Chats
+            </Button>
           </div>
-          {boxCurrentTab === "users" ? users.map((u) => <div> {u.str} </div>) : "chats"}
+
+          {boxCurrentTab === "users" ? (
+            <div className={styles.users_list}>
+              {users.map((u) => (
+                <div className={styles.user}>
+                  <span>
+                    {" "}
+                    {u.name} : ({u.status}){" "}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            "chats"
+          )}
 
           {/* {JSON.stringify(users)} */}
         </div>
       </div>
       <div className={styles.details}>
         <div className={styles.url_box}>
-          <div>Enter Video Url :</div>
-          <div>
-            <input value={url} onChange={(e) => setUrl(e.target.value)} />
+          <div className={styles.url_box__title}>Enter Video Url :</div>
+          <div className={styles.url_box__input}>
+            <TextField
+              style={{ margin: "8px 0", width: 400 }}
+              id="outlined-basic"
+              label="URL"
+              variant="outlined"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
           </div>
-          <div>
-            <button
+          <div >
+            <Button
               onClick={() => {
                 videoStore.setVideoUrl(url);
-                if (socket) socket.emit("/set-video", { url });
+                if (socket) {
+                  socket.emit("/set-video", { url });
+                  videoStore.setVideoPlayed(0);
+                  videoStore.setVideoState(false);
+                  videoStore.setPlayerIsReady(false);
+                }
               }}
+              color="success"
+              className={styles.url_box__submit}
             >
               submit
-            </button>
+            </Button>
           </div>
+        </div>
+
+        <div className={styles.get_ready_box}>
+          <Button color="inherit" variant="contained" className={styles.get_ready_box__btn} onClick={() => handleSetUserReady(!videoStore.isReady)}>
+            {videoStore.isReady ? "unready" : "ready"}
+          </Button>
         </div>
       </div>
     </div>

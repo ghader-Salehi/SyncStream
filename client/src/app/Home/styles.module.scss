@@ -21,7 +21,8 @@
       color: #383838;
       font-weight: bold;
       transition: transform 250ms, background-color 250ms;
-
+      box-shadow: 0 5px 40px rgba(0, 0, 0, .16);
+      
       &:hover {
         background-color: rgb(147, 147, 147);
         transform: translateY(-4px);

@@ -10,12 +10,14 @@ function Main() {
   return (
     <div>
       <Header />
-      <Routes>
-        <Route path={"/"} element={<Home  />} />
-        <Route path={"/session/:id"} element={<Session videoStore={VideoInfosStore} />} />
-        <Route path={"/rooms"} element={<Rooms />} />
-        <Route path={"/youtube-search"} element={<YouTube videoStore={VideoInfosStore} />} />
-      </Routes>
+      <main style={{paddingTop : 80}}>
+        <Routes>
+          <Route path={"/"} element={<Home />} />
+          <Route path={"/session/:id"} element={<Session videoStore={VideoInfosStore} />} />
+          <Route path={"/rooms"} element={<Rooms />} />
+          <Route path={"/youtube-search"} element={<YouTube videoStore={VideoInfosStore} />} />
+        </Routes>
+      </main>
     </div>
   );
 }

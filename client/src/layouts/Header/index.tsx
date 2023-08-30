@@ -10,7 +10,7 @@ import TextField from "@mui/material/TextField";
 
 import styles from "./styles.module.scss";
 
-type ModalForm = "login" | "register"
+type ModalForm = "login" | "register";
 
 const style = {
   position: "absolute" as "absolute",
@@ -31,10 +31,9 @@ function Header() {
 
   console.log(modalState);
 
-  const handleSetModalState = (state : ModalForm) => () => {
-    setModalState(state)
-  }
-  
+  const handleSetModalState = (state: ModalForm) => () => {
+    setModalState(state);
+  };
 
   const renderLoginForm = (
     <>
@@ -108,7 +107,7 @@ function Header() {
         </Button>
       </form>
       <div onClick={handleSetModalState("login")} style={{ marginTop: 24, cursor: "pointer" }}>
-        <span >Login</span>
+        <span>Login</span>
       </div>
     </>
   );
@@ -116,7 +115,9 @@ function Header() {
   return (
     <div className={styles.header}>
       <div className={styles.heading}>
-        <span className={styles.logo}>SyncStream</span>
+        <span onClick={() => navigate("/")} className={styles.logo}>
+          SyncStream
+        </span>
         <a href="https://github.com/ghader-Salehi/SyncStream" target="_blank" rel="noreferrer">
           <IconButton className={styles.github} color="default">
             <GitHubIcon color="action" />
@@ -124,7 +125,24 @@ function Header() {
         </a>
       </div>
       <div className={styles.login}>
-        <Button onClick={() => setOpen(true)} className={styles.login_btn} variant="text">
+        <Button
+          onClick={() => {
+            setOpen(true);
+            setModalState("register");
+          }}
+          className={styles.login_btn}
+          variant="text"
+        >
+          Sign up
+        </Button>
+        <Button
+          onClick={() => {
+            setOpen(true);
+            setModalState("login");
+          }}
+          className={styles.login_btn}
+          variant="text"
+        >
           Login
         </Button>
       </div>

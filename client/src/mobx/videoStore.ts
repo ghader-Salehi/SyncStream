@@ -1,6 +1,6 @@
 import { makeObservable, observable, action } from "mobx";
 
-export type PlayerState = "paused" | "buffering" | "playing" 
+export type PlayerState = "paused" | "buffering" | "playing" | "ready"
 //  https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4
 export class VideoInfos {
   url: string = "";
