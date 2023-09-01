@@ -10,6 +10,7 @@ import { observer } from "mobx-react-lite";
 
 import { login, register } from "api/auth";
 import { AuthInfo, AuthStore } from "mobx/authStore";
+import { initAxios } from "api";
 
 const style = {
   position: "absolute" as "absolute",
@@ -51,6 +52,8 @@ const LoginForm = observer(({ auth, setOpen }: ILoginForm) => {
       const res = await login({ email, password });
 
       auth.setToken(res.data.token);
+      localStorage.setItem("ss_token" , res.data.token);
+      initAxios(res.data.token);
       const userObj = {
         email: res.data.user.email,
         name: res.data.user.name,

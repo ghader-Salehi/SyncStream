@@ -9,6 +9,7 @@ import { grant } from "api/auth";
 
 import styles from "./styles.module.scss";
 import { AuthInfo } from "mobx/authStore";
+import { initAxios } from "api";
 
 type ModalForm = "login" | "register";
 interface IHeader {
@@ -22,8 +23,9 @@ function Header({ auth }: IHeader) {
 
   const handleGrantUserInfo = async () => {
     try {
-      const res = await grant();
+      const res = await grant(true);
       const token = res.data.token;
+      initAxios(token);
       auth.setToken(token);
       localStorage.setItem("ss_token", token);
     } catch (error) {
