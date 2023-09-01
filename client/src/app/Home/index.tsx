@@ -8,12 +8,18 @@ import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
+import { observer } from "mobx-react-lite";
 // import Select from "@mui/material/Select";
 // import MenuItem from "@mui/material/MenuItem/MenuItem";
+// import { InputLabel } from "@mui/material";
 
 import styles from "./styles.module.scss";
-// import { InputLabel } from "@mui/material";
-interface HomeProps {}
+import { AuthInfo } from "mobx/authStore";
+import { toast } from "react-toastify";
+
+interface HomeProps {
+  auth: AuthInfo;
+}
 
 const style = {
   position: "absolute" as "absolute",
@@ -27,7 +33,7 @@ const style = {
   p: 4,
 };
 
-const Home: FunctionComponent<HomeProps> = () => {
+const Home: FunctionComponent<HomeProps> = observer(({ auth }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -116,7 +122,14 @@ const Home: FunctionComponent<HomeProps> = () => {
         <Button onClick={handleCreateTemporaryRoom} className={styles.menu_item}>
           Create Temporary Room
         </Button>
-        <Button onClick={() => setOpen(true)} className={styles.menu_item}>
+        <Button onClick={() => {
+          if(auth.user){
+            setOpen(true)
+            return;
+          }
+          toast.warn("You should login before a create permanent room")
+          
+        }} className={styles.menu_item}>
           Create Permanent Room
         </Button>
         <Button
@@ -152,6 +165,6 @@ const Home: FunctionComponent<HomeProps> = () => {
       </Modal>
     </div>
   );
-};
+});
 
 export default Home;

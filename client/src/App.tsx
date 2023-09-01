@@ -26,6 +26,7 @@ function App() {
     <div className="App">
       <Main />
       <ToastContainer
+      style={{textAlign : "left"}}
         position="bottom-left"
         autoClose={5000}
         hideProgressBar={false}

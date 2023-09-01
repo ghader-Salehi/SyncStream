@@ -5,9 +5,13 @@ import { ObjectId } from "mongodb";
 import * as roomManager from "../socket/roomManager"
 
 // fetch only permanent rooms
-export const getRooms = async (req: Request, res: Response) => {
+export const getRooms = async (req, res) => {
   try {
-    const allRooms = await prisma.room.findMany();
+    const allRooms = await prisma.room.findMany({
+      where: {
+        adminId: req.user.id,
+      },
+    });
 
     res.status(200).json({
       status: "success",
