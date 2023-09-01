@@ -51,14 +51,19 @@ const RoomCard = ({ name, title, id }: RoomCardProps) => {
 
 const Rooms: FunctionComponent<RoomsProps> = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleGetRoomsList = async () => {
+    setIsLoading(true)
     try {
       const res = await getRooms();
       console.log(res.data.allRooms);
       setRooms(res.data.allRooms);
     } catch (error) {
       console.log("🚀 ~ file: index.tsx:15 ~ handleGetRoomsList ~ error:", error);
+    }
+    finally{
+      setIsLoading(false);
     }
   };
 
@@ -75,7 +80,7 @@ const Rooms: FunctionComponent<RoomsProps> = () => {
         {rooms.map((r, i) => {
           return <RoomCard key={i} id={r.id} name={r.name} title={r.title} />;
         })}
-        {rooms.length === 0 && (<div><CircularProgress /></div>)}
+        {isLoading && (<div style={{display : "flex" , width : "100%" , justifyContent : "center"}} ><CircularProgress /></div>)}
       </div>
     </div>
   );

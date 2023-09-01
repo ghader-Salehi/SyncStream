@@ -5,11 +5,12 @@ import Session from "app/Session";
 import Rooms from "app/Rooms";
 import YouTube from "app/YouTube";
 import { VideoInfosStore } from "mobx/videoStore";
+import { AuthStore } from "mobx/authStore";
 
 function Main() {
   return (
     <div>
-      <Header />
+      <Header auth={AuthStore} />
       <main style={{paddingTop : 80}}>
         <Routes>
           <Route path={"/"} element={<Home />} />

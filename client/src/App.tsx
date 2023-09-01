@@ -3,6 +3,8 @@ import Main from "../src/app/index";
 // import { useEffect } from "react";
 // import { grant } from "api/auth";
 // import { initAxios } from "api";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.min.css";
 
 function App() {
   // const handleGrantUserInfo = async () => {
@@ -23,6 +25,16 @@ function App() {
   return (
     <div className="App">
       <Main />
+      <ToastContainer
+        position="bottom-left"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

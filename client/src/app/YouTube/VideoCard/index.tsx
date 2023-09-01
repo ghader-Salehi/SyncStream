@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 
 import styles from "./styles.module.scss";
-import { createRoom } from "api/room";
+import { IRoom, createRoom } from "api/room";
 
 interface IVideoCard {
   id: string;
@@ -18,7 +18,7 @@ const VideoCard = ({ id, title , thumbnail , setVideoUrl }: IVideoCard) => {
 
   const handleClickOnCard = async () =>{
     try {
-      const dataObj = {
+      const dataObj: IRoom = {
         name: "Room " + uuid(),
         title: "title",
         type: "TEMPORARY",

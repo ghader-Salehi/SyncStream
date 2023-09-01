@@ -2,7 +2,14 @@ import { axiosWithAuth } from "./index";
 
 const API_BASE = "/api/room";
 
-export async function createRoom(data: any) {
+export type RoomType = "TEMPORARY" | "PERMANENT";
+export interface IRoom {
+  name: string;
+  title: string;
+  type: RoomType;
+}
+
+export async function createRoom(data: IRoom) {
   return await axiosWithAuth.post(API_BASE + "/create", data);
 }
 

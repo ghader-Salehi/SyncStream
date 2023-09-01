@@ -5,19 +5,25 @@
   .youtube__search_box{
     display: flex;
     width: 100%;
-    margin-top: 24px;
+    // margin-top: 24px;
     justify-content: center;
+    background-color: #fff;
+    padding:  16px 0;
+    position: fixed;
+    top: 80;
   }
 
   .youtube__list {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 150px;
     
     .no_data{
       display: flex;
       width: 100%;
       justify-content: center;
-      margin-top: 25px;
+      margin-top: 70px;
+      font-size: 20px;
     }
   }
 

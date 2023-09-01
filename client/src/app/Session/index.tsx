@@ -285,6 +285,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
             </IconButton>
           </div>
+
+          {!videoStore.url && (
+            <div className={styles.no_video}>
+              <span>No Video To Display</span>
+            </div>
+          )}
         </div>
         <div className={styles.box}>
           <div className={styles.box_header}>
@@ -327,7 +333,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               onChange={(e) => setUrl(e.target.value)}
             />
           </div>
-          <div >
+          <div>
             <Button
               onClick={() => {
                 videoStore.setVideoUrl(url);
@@ -347,7 +353,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         </div>
 
         <div className={styles.get_ready_box}>
-          <Button color="inherit" variant="contained" className={styles.get_ready_box__btn} onClick={() => handleSetUserReady(!videoStore.isReady)}>
+          <Button
+            color="inherit"
+            variant="contained"
+            className={styles.get_ready_box__btn}
+            onClick={() => handleSetUserReady(!videoStore.isReady)}
+          >
             {videoStore.isReady ? "unready" : "ready"}
           </Button>
         </div>

@@ -1,18 +1,18 @@
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useState , FormEvent} from "react";
 
 import { useNavigate } from "react-router-dom";
-import { createRoom } from "api/room";
+import { createRoom, IRoom } from "api/room";
 import { v4 as uuid } from "uuid";
 import Button from "@mui/material/Button/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem/MenuItem";
+// import Select from "@mui/material/Select";
+// import MenuItem from "@mui/material/MenuItem/MenuItem";
 
 import styles from "./styles.module.scss";
-import { InputLabel } from "@mui/material";
+// import { InputLabel } from "@mui/material";
 interface HomeProps {}
 
 const style = {
@@ -31,14 +31,13 @@ const Home: FunctionComponent<HomeProps> = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-
   const [roomName, setRoomName] = useState("");
   const [roomTitle, setRoomTitle] = useState("");
-  const [roomType , setRoomType] = useState(0)
+  // const [roomType , setRoomType] = useState(0);
 
   const handleCreateTemporaryRoom = async () => {
     try {
-      const dataObj = {
+      const dataObj: IRoom = {
         name: "Room " + uuid(),
         title: "title",
         type: "TEMPORARY",
@@ -52,20 +51,31 @@ const Home: FunctionComponent<HomeProps> = () => {
     }
   };
 
-  const handleCreatePermanentRoom = () => {
-    // open a modal for getting room data
-    setOpen(true);
+  const handleCreatePermanentRoom = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await createRoom({
+        name : roomName,
+        title : roomTitle,
+        type : "PERMANENT"
+      })
+
+      navigate(`/session/${res.data.room.id}`);
+    } catch (error) {
+        console.log(error);
+        
+    }
   };
 
   const renderCreateRoomForm = (
-    <form>
+    <form onSubmit={handleCreatePermanentRoom}>
       <TextField
         style={{ margin: "32px 0px 16px 0px", width: "100%" }}
         id="outlined-basic"
         label="Room Name"
         variant="outlined"
         value={roomName}
-        onChange={(e)=>setRoomName(e.target.value)}
+        onChange={(e) => setRoomName(e.target.value)}
       />
       <TextField
         style={{ margin: "8px 0", width: "100%" }}
@@ -73,12 +83,12 @@ const Home: FunctionComponent<HomeProps> = () => {
         label="Room Title"
         variant="outlined"
         value={roomTitle}
-        onChange={(e)=>setRoomTitle(e.target.value)}
+        onChange={(e) => setRoomTitle(e.target.value)}
       />
-      <InputLabel style={{ marginTop: "8px", width: "100%" , }}>
+      {/* <InputLabel style={{ marginTop: "8px", width: "100%" , }}>
         Room Type
-      </InputLabel>
-      <Select
+      </InputLabel> */}
+      {/* <Select
         style={{ marginTop: "8px", width: "100%" , }}
         label="Type"
         value={roomType}
@@ -87,7 +97,7 @@ const Home: FunctionComponent<HomeProps> = () => {
       >
         <MenuItem value={0}>Permanent</MenuItem>
         <MenuItem value={1}>Temporary</MenuItem>
-      </Select>
+      </Select> */}
 
       <Button
         style={{ marginTop: 24, width: "100%" }}
@@ -106,7 +116,7 @@ const Home: FunctionComponent<HomeProps> = () => {
         <Button onClick={handleCreateTemporaryRoom} className={styles.menu_item}>
           Create Temporary Room
         </Button>
-        <Button onClick={handleCreatePermanentRoom} className={styles.menu_item}>
+        <Button onClick={() => setOpen(true)} className={styles.menu_item}>
           Create Permanent Room
         </Button>
         <Button

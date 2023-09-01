@@ -58,12 +58,13 @@ const YouTube: FunctionComponent<YouTubeProps> = observer(({ videoStore }) => {
     <div className={styles.youtube}>
       <div className={styles.youtube__search_box}>
         <TextField
-          style={{ margin: 16, width: 300 }}
+          style={{ margin: 16, width: 400 }}
           id="outlined-basic"
-          label="Search Your Youtube video"
+          label="Search Youtube video"
           variant="outlined"
           value={searchedText}
           onChange={(e) => setSearchedText(e.target.value)}
+          className={styles.search_input}
         />
       </div>
 
@@ -85,7 +86,7 @@ const YouTube: FunctionComponent<YouTubeProps> = observer(({ videoStore }) => {
           );
         })}
         {!videosList.length && !isLoading && (
-          <div className={styles.no_data}> There is no video to display! Search Something.</div>
+          <div className={styles.no_data}> There is no video to display! Search any YouTube video you want.</div>
         )}
       </div>
     </div>

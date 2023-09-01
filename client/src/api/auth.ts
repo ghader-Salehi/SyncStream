@@ -2,11 +2,22 @@ import { axiosWithAuth } from "./index";
 
 const API_BASE = "/api/auth/user";
 
-export async function login(credentials: any) {
+interface ILoginCredentials {
+  email : string,
+  password : string
+}
+
+interface IRegisterData {
+  name : string,
+  email : string,
+  password : string
+}
+
+export async function login(credentials: ILoginCredentials) {
   return await axiosWithAuth.post(API_BASE + "/login", credentials);
 }
 
-export async function register(data: any) {
+export async function register(data: IRegisterData) {
   return await axiosWithAuth.post(API_BASE + "/register", data);
 }
 

@@ -7,11 +7,7 @@ import * as roomManager from "../socket/roomManager"
 // fetch only permanent rooms
 export const getRooms = async (req: Request, res: Response) => {
   try {
-    const allRooms = await prisma.room.findMany({
-      include: {
-        users: true, // Include the related users in the response
-      },
-    });
+    const allRooms = await prisma.room.findMany();
 
     res.status(200).json({
       status: "success",

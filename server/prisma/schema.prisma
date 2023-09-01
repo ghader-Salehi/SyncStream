@@ -26,8 +26,8 @@ model User {
     token     Token?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    roomId    String   @unique @db.ObjectId
-    room      Room     @relation(fields: [roomId], references: [id])
+    // roomId    String   @unique @db.ObjectId
+    // room      Room     @relation(fields: [roomId], references: [id])
     role      Role?
 }
 
@@ -47,5 +47,5 @@ model Room {
     title     String    
     type      RoomType  
     adminId   String   
-    users     User[]
+    // users     User[]
 }
