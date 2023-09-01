@@ -95,6 +95,7 @@
 
   .details {
     display: flex;
+    justify-content: space-between;
     // flex-direction: column;
     align-items: center;
     width: 100%;
@@ -131,6 +132,23 @@
 
       .get_ready_box__btn{
         font-weight: bold;
+      }
+    }
+
+    .invite_link_box{
+      display: flex;
+      align-items: center;
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 0 16px;
+      margin-left: 32px;
+
+      .invite_link_box__title{
+        margin-right: 16px;
+      }
+
+      .invite_link_box__input{
+
       }
     }
   }

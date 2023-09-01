@@ -321,46 +321,63 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         </div>
       </div>
       <div className={styles.details}>
-        <div className={styles.url_box}>
-          <div className={styles.url_box__title}>Enter Video Url :</div>
-          <div className={styles.url_box__input}>
-            <TextField
-              style={{ margin: "8px 0", width: 400 }}
-              id="outlined-basic"
-              label="URL"
-              variant="outlined"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
+        <div style={{display : "flex" , alignItems: "center"}} >
+          <div className={styles.url_box}>
+            <div className={styles.url_box__title}>Enter Video Url :</div>
+            <div className={styles.url_box__input}>
+              <TextField
+                style={{ margin: "8px 0", width: 400 }}
+                id="outlined-basic"
+                label="URL"
+                variant="outlined"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+            </div>
+            <div>
+              <Button
+                onClick={() => {
+                  videoStore.setVideoUrl(url);
+                  if (socket) {
+                    socket.emit("/set-video", { url });
+                    videoStore.setVideoPlayed(0);
+                    videoStore.setVideoState(false);
+                    videoStore.setPlayerIsReady(false);
+                  }
+                }}
+                color="success"
+                className={styles.url_box__submit}
+              >
+                submit
+              </Button>
+            </div>
           </div>
-          <div>
+
+          <div className={styles.get_ready_box}>
             <Button
-              onClick={() => {
-                videoStore.setVideoUrl(url);
-                if (socket) {
-                  socket.emit("/set-video", { url });
-                  videoStore.setVideoPlayed(0);
-                  videoStore.setVideoState(false);
-                  videoStore.setPlayerIsReady(false);
-                }
-              }}
-              color="success"
-              className={styles.url_box__submit}
+              color="inherit"
+              variant="contained"
+              className={styles.get_ready_box__btn}
+              onClick={() => handleSetUserReady(!videoStore.isReady)}
             >
-              submit
+              {videoStore.isReady ? "unready" : "ready"}
             </Button>
           </div>
         </div>
 
-        <div className={styles.get_ready_box}>
-          <Button
-            color="inherit"
-            variant="contained"
-            className={styles.get_ready_box__btn}
-            onClick={() => handleSetUserReady(!videoStore.isReady)}
-          >
-            {videoStore.isReady ? "unready" : "ready"}
-          </Button>
+        <div className={styles.invite_link_box}>
+          <div className={styles.invite_link_box__title}>
+            <span>Share Invite Link:</span>
+          </div>
+          <div className={styles.invite_link_box__input}>
+            <TextField
+              style={{ margin: "8px 0", width: 450 }}
+              id="outlined-basic"
+              label="Invite Link  "
+              variant="outlined"
+              value={"https://syncstream.io/session/64f1edce5584c8c3adf4e606"}
+            />
+          </div>
         </div>
       </div>
     </div>
