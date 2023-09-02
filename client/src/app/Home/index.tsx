@@ -127,7 +127,7 @@ const Home: FunctionComponent<HomeProps> = observer(({ auth }) => {
             setOpen(true)
             return;
           }
-          toast.warn("You should login before a create permanent room")
+          toast.warn("You should login before create a permanent room")
           
         }} className={styles.menu_item}>
           Create Permanent Room

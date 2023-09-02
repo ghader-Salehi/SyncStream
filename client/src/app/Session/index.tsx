@@ -375,7 +375,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               id="outlined-basic"
               label="Invite Link  "
               variant="outlined"
-              value={"https://syncstream.io/session/64f1edce5584c8c3adf4e606"}
+              value={`https://syncstream.io/session/${id}`}
             />
           </div>
         </div>
