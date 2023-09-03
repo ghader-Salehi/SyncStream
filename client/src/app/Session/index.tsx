@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useState, useRef } from "react";
+import React, { FunctionComponent, useEffect, useState, useRef, KeyboardEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
@@ -14,6 +14,7 @@ import { Button, IconButton, TextField } from "@mui/material";
 import styles from "./styles.module.scss";
 import { connectToSocket } from "api/socket";
 import { VideoInfos } from "mobx/videoStore";
+import Chats, { Chat } from "./components/Chats";
 
 // interface OnProgressProps {
 //   played: number;
@@ -55,8 +56,10 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [playedSecs, setPlayedSecs] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [boxCurrentTab, setBoxCurrentTab] = useState("users");
+  const [boxCurrentTab, setBoxCurrentTab] = useState<"users" | "chats">("users");
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [chat, setChat] = useState("");
+  const [chatsList, setChatsList] = useState<Chat[]>([]);
 
   const playerRef = useRef<ReactPlayer | null>(null);
 
@@ -111,6 +114,15 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
     }
   };
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLImageElement>) => {
+    if (!e || (e && e.key === "Enter" && !e.shiftKey)) {
+      console.log(chat);
+
+      socket.emit("/chat", { chat });
+      setChat("");
+    }
+  };
+
   useEffect(() => {
     if (id) {
       socket = connectToSocket(id);
@@ -152,6 +164,10 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       socket.on("/users", (data) => {
         setUsers(data);
         //  get users last update list
+      });
+
+      socket.on("/chats", (data) => {
+        setChatsList(data);
       });
 
       // send video url to server when selecting a video from list to watching it in sync
@@ -293,35 +309,46 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
           )}
         </div>
         <div className={styles.box}>
-          <div className={styles.box_header}>
-            <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("users")}>
-              Users
-            </Button>
-            <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("chats")}>
-              Chats
-            </Button>
-          </div>
-
-          {boxCurrentTab === "users" ? (
-            <div className={styles.users_list}>
-              {users.map((u) => (
-                <div className={styles.user}>
-                  <span>
-                    {" "}
-                    {u.name} : ({u.status}){" "}
-                  </span>
-                </div>
-              ))}
+          <div className={styles.box__content}>
+            <div className={styles.box_header}>
+              <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("users")}>
+                Users
+              </Button>
+              <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("chats")}>
+                Chats
+              </Button>
             </div>
-          ) : (
-            "chats"
-          )}
 
-          {/* {JSON.stringify(users)} */}
+            {boxCurrentTab === "users" ? (
+              <div className={styles.users_list}>
+                {users.map((u) => (
+                  <div className={styles.user}>
+                    <span className={styles.user__name}> {u.name} :</span> 
+                    <span data-ready={u.status === "ready"} className={styles.user__status}>({u.status.toUpperCase()})</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Chats chats={chatsList} />
+            )}
+          </div>
+          {boxCurrentTab === "chats" && (
+            <div className={styles.box__chat_input}>
+              <TextField
+                style={{ margin: "8px 0", width: "100%", backgroundColor: "#fff" }}
+                id="outlined-basic"
+                label="Type something..."
+                variant="filled"
+                value={chat}
+                onChange={(e) => setChat(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
+          )}
         </div>
       </div>
       <div className={styles.details}>
-        <div style={{display : "flex" , alignItems: "center"}} >
+        <div style={{ display: "flex", alignItems: "center" }}>
           <div className={styles.url_box}>
             <div className={styles.url_box__title}>Enter Video Url :</div>
             <div className={styles.url_box__input}>

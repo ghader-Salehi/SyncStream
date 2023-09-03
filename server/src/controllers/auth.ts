@@ -154,7 +154,7 @@ export const grant = async (req: Request, res: Response) => {
   try {
     const header = req.header("Authorization");
 
-    // if token exist return same token
+    // if the token exist return the received token.
     if (header) {
       const [type, token] = header.split(" ");
 
@@ -162,13 +162,13 @@ export const grant = async (req: Request, res: Response) => {
         //TODO: check if its not expired
         res.status(200).json({
           status: "success",
-          token,
+          token
         });
       }
 
       return;
     }
-    // if not exist generate one
+    // if not generate one.
     const randomUser = {
       id: uuid(),
       name: uniqueNamesGenerator({

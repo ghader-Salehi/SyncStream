@@ -65,30 +65,57 @@
       background-color: rgb(197, 197, 197);
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       padding: 16px;
       border-radius: 12px;
       box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
 
-      .box_header {
+      .box__content{
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
 
-        .tab_button {
-          color: #4c4c4c;
-          font-weight: bold;
+        .box_header {
+          display: flex;
+          justify-content: space-between;
+  
+          .tab_button {
+            color: #4c4c4c;
+            font-weight: bold;
+          }
+        }
+  
+        .users_list {
+          margin: 12px;
+          max-height: 450px;
+          overflow: auto;
+  
+          .user {
+            display: flex;
+            width: 100%;
+            margin: 8px 0px;
+
+            .user__name{
+                font-weight: bold;
+            }
+
+            .user__status{
+              margin-left: 6px;
+              font-size: 14px;
+              color: red;
+
+              &[data-ready="true"]{
+                color: rgb(7, 195, 14);
+              }
+            }
+          }
         }
       }
 
-      .users_list {
-        margin: 12px;
-        max-height: 450px;
-        overflow: auto;
 
-        .user {
-          display: flex;
-          width: 100%;
-          margin: 8px 0px;
-        }
+      .box__chat_input{
+        display: flex;
+        width: 100%;
+        
       }
     }
   }

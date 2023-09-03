@@ -1,0 +1,22 @@
+.chats_list {
+    margin: 12px;
+    max-height: 450px;
+    overflow: auto;
+
+    .chat {
+      display: flex;
+      width: 100%;
+      margin: 6px 0px;
+
+      .chat__sender{
+        font-weight: bold;
+        white-space: nowrap;
+      }
+
+      .chat__content {
+        margin-left: 8px;
+        display: flex;
+        text-align: left;
+      }
+    }
+  }

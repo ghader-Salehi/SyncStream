@@ -67,6 +67,7 @@ export async function setup() {
 
       if (room?.info) socket.emit("/sync", room.info);
       if (room?.videoUrl) socket.emit("/get-video", { url: room.videoUrl });
+      if (room?.chats) socket.emit("/chats", room?.chats);
     } else {
       console.log(`${userName} already added to the room`);
     }
@@ -93,6 +94,18 @@ export async function setup() {
       socket.emit("/users", users);
       socket.broadcast.to(roomID).emit("/users", users);
     });
+
+
+    socket.on("/chat" , (data)=> {
+      const chatsList = roomManager.addChat(roomID, data.chat , {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      });
+
+      socket.emit("/chats", chatsList);
+      socket.broadcast.to(roomID).emit("/chats", chatsList);
+    })
 
     // remove user from users list
     socket.on("disconnect", () => {
