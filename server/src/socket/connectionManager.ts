@@ -39,7 +39,7 @@ export async function setup() {
     const roomID: string = socket.handshake.query.id;
     const token: string = socket.handshake.auth.token;
     const user: IJWTUser = getUser(token);
-    
+
     // const userId = user ? user.id : socket.id;
     const userName = user?.name || "";
     const room = roomManager.rooms.find((r) => r._id === roomID);
@@ -65,6 +65,7 @@ export async function setup() {
       socket.emit("/users", users);
       socket.broadcast.to(roomID).emit("/users", users);
 
+      if (room?.type) socket.emit("/room", { type: room.type });
       if (room?.info) socket.emit("/sync", room.info);
       if (room?.videoUrl) socket.emit("/get-video", { url: room.videoUrl });
       if (room?.chats) socket.emit("/chats", room?.chats);
@@ -95,9 +96,8 @@ export async function setup() {
       socket.broadcast.to(roomID).emit("/users", users);
     });
 
-
-    socket.on("/chat" , (data)=> {
-      const chatsList = roomManager.addChat(roomID, data.chat , {
+    socket.on("/chat", (data) => {
+      const chatsList = roomManager.addChat(roomID, data.chat, {
         id: user.id,
         name: user.name,
         email: user.email,
@@ -105,7 +105,7 @@ export async function setup() {
 
       socket.emit("/chats", chatsList);
       socket.broadcast.to(roomID).emit("/chats", chatsList);
-    })
+    });
 
     // remove user from users list
     socket.on("disconnect", () => {

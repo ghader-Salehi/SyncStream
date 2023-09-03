@@ -63,6 +63,7 @@ const LoginForm = observer(({ auth, setOpen }: ILoginForm) => {
       localStorage.setItem("ss_user" , JSON.stringify(userObj));
       setOpen(false);
       toast.success("You logged in successfully");
+      window.location.reload();
     } catch (error) {
       toast.error("Failure");
     }

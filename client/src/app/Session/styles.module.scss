@@ -81,6 +81,7 @@
           .tab_button {
             color: #4c4c4c;
             font-weight: bold;
+            width: 50%;
           }
         }
   
@@ -175,7 +176,13 @@
       }
 
       .invite_link_box__input{
-
+        margin-right: 16px;
+      }
+      
+      .invite_link_box__room_type{
+        font-weight: bold;
+        display: flex;
+        align-items: center;
       }
     }
   }

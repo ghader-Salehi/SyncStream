@@ -60,6 +60,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [chat, setChat] = useState("");
   const [chatsList, setChatsList] = useState<Chat[]>([]);
+  const [roomType, setRoomType] = useState("");
 
   const playerRef = useRef<ReactPlayer | null>(null);
 
@@ -170,10 +171,18 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         setChatsList(data);
       });
 
+      socket.on("/room" , (data)=> {
+        setRoomType(data.type);
+      })
+
       // send video url to server when selecting a video from list to watching it in sync
       if (videoStore.url) {
         socket.emit("/set-video", { url });
       }
+    }
+
+    return ()=>{
+      socket.disconnect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -404,6 +413,11 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               variant="outlined"
               value={`https://syncstream.io/session/${id}`}
             />
+          </div>
+          <div className={styles.invite_link_box__room_type}>
+            <span>
+              {roomType.toUpperCase()}
+            </span>
           </div>
         </div>
       </div>
