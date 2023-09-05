@@ -10,6 +10,7 @@ import PauseIcon from "@mui/icons-material/Pause";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import { Button, IconButton, TextField } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import styles from "./styles.module.scss";
 import { connectToSocket } from "api/socket";
@@ -61,6 +62,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const [chat, setChat] = useState("");
   const [chatsList, setChatsList] = useState<Chat[]>([]);
   const [roomType, setRoomType] = useState("");
+  const matches = useMediaQuery("(max-width:992px)");
 
   const playerRef = useRef<ReactPlayer | null>(null);
 
@@ -171,9 +173,9 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         setChatsList(data);
       });
 
-      socket.on("/room" , (data)=> {
+      socket.on("/room", (data) => {
         setRoomType(data.type);
-      })
+      });
 
       // send video url to server when selecting a video from list to watching it in sync
       if (videoStore.url) {
@@ -181,9 +183,15 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       }
     }
 
-    return ()=>{
-      socket.disconnect();
-    }
+    // return () => {
+    //   socket.disconnect();
+    //   alert("hey")
+    //   videoStore.setVideoUrl("");
+    //   videoStore.setVideoPlayed(0);
+    //   videoStore.setVideoState(false);
+    //   videoStore.setPlayerIsReady(false);
+    // };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -332,8 +340,10 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               <div className={styles.users_list}>
                 {users.map((u) => (
                   <div className={styles.user}>
-                    <span className={styles.user__name}> {u.name} :</span> 
-                    <span data-ready={u.status === "ready"} className={styles.user__status}>({u.status.toUpperCase()})</span>
+                    <span className={styles.user__name}> {u.name} :</span>
+                    <span data-ready={u.status === "ready"} className={styles.user__status}>
+                      ({u.status.toUpperCase()})
+                    </span>
                   </div>
                 ))}
               </div>
@@ -357,12 +367,13 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         </div>
       </div>
       <div className={styles.details}>
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div className={styles.details__inner}>
           <div className={styles.url_box}>
-            <div className={styles.url_box__title}>Enter Video Url :</div>
+            {!matches && <div className={styles.url_box__title}>Enter Video Url :</div>}
+
             <div className={styles.url_box__input}>
               <TextField
-                style={{ margin: "8px 0", width: 400 }}
+                style={{ margin: "8px 0", width: matches ? 230 : 400 }}
                 id="outlined-basic"
                 label="URL"
                 variant="outlined"
@@ -389,6 +400,44 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             </div>
           </div>
 
+          {!matches && (
+            <div className={styles.get_ready_box}>
+              <Button
+                color="inherit"
+                variant="contained"
+                className={styles.get_ready_box__btn}
+                onClick={() => handleSetUserReady(!videoStore.isReady)}
+              >
+                {videoStore.isReady ? "unready" : "ready"}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.invite_link_box}>
+          {!matches && (
+            <div className={styles.invite_link_box__title}>
+              <span>Share Invite Link:</span>
+            </div>
+          )}
+
+          <div className={styles.invite_link_box__input}>
+            <TextField
+              style={{ margin: "8px 0", width: matches ? 300 : 400 }}
+              id="outlined-basic"
+              label="Invite Link  "
+              variant="outlined"
+              value={`https://syncstream.io/session/${id}`}
+            />
+          </div>
+          {!matches && (
+            <div className={styles.invite_link_box__room_type}>
+              <span>{roomType.toUpperCase()}</span>
+            </div>
+          )}
+        </div>
+
+        {/* {matches && (
           <div className={styles.get_ready_box}>
             <Button
               color="inherit"
@@ -399,27 +448,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               {videoStore.isReady ? "unready" : "ready"}
             </Button>
           </div>
-        </div>
-
-        <div className={styles.invite_link_box}>
-          <div className={styles.invite_link_box__title}>
-            <span>Share Invite Link:</span>
-          </div>
-          <div className={styles.invite_link_box__input}>
-            <TextField
-              style={{ margin: "8px 0", width: 450 }}
-              id="outlined-basic"
-              label="Invite Link  "
-              variant="outlined"
-              value={`https://syncstream.io/session/${id}`}
-            />
-          </div>
-          <div className={styles.invite_link_box__room_type}>
-            <span>
-              {roomType.toUpperCase()}
-            </span>
-          </div>
-        </div>
+        )} */}
       </div>
     </div>
   );
