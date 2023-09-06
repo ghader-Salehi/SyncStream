@@ -9,6 +9,8 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
+import FastForwardIcon from '@mui/icons-material/FastForward';
+
 import { Button, IconButton, TextField } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
@@ -16,13 +18,6 @@ import styles from "./styles.module.scss";
 import { connectToSocket } from "api/socket";
 import { VideoInfos } from "mobx/videoStore";
 import Chats, { Chat } from "./components/Chats";
-
-// interface OnProgressProps {
-//   played: number;
-//   playedSeconds: number;
-//   loaded: number;
-//   loadedSeconds: number;
-// }
 
 interface SessionProps {
   videoStore: VideoInfos;
@@ -65,6 +60,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const matches = useMediaQuery("(max-width:992px)");
 
   const playerRef = useRef<ReactPlayer | null>(null);
+  const [eventStartTime, setEventStartTime] = useState<Date | null>(null);
 
   const handleSeekMouseDown = () => {
     setSeeking(true);
@@ -77,18 +73,11 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
     playerRef.current?.seekTo(fraction);
   };
 
-  const handlePlayPause = (playing: boolean) => {
-    videoStore.setVideoState(playing);
-    socket.emit("/req", {
-      playing,
-      played: videoStore.played,
-    });
-  };
-
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fraction = parseFloat(e.target.value);
     videoStore.setVideoPlayed(fraction);
     setPlayedSecs(+e.target.value * duration);
+
     socket.emit("/req", {
       playing: false,
       played: fraction,
@@ -97,17 +86,35 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
     videoStore.setVideoState(false);
   };
 
-  // const handleSliderChange = (event: Event, newValue: number | number[]) => {
-  //   videoStore.setVideoPlayed((newValue as number / 100) * duration);
-  //   setPlayedSecs((newValue as number  / 100) * duration);
-  //   playerRef.current?.seekTo((newValue as number  / 100) * duration);
+  const handlePlayPause = (playing: boolean) => {
+    videoStore.setVideoState(playing);
+
+    socket.emit("/req", {
+      playing,
+      played: videoStore.played,
+    });
+  };
+
+  const handleSkipForward = () => {
+    const currentTime = playerRef.current?.getCurrentTime() || 0;
+    playerRef.current?.seekTo(currentTime + 10); // Skip forward by 10 seconds
+
+    videoStore.setVideoState(false);
+    socket.emit("/req", {
+      playing: false,
+      played: currentTime + 10,
+    });
+
+  };
+
+  // const handleRewind = () => {
+  //   const currentTime = playerRef.current?.getCurrentTime() || 0;
+  //   playerRef.current?.seekTo(currentTime - 10);
 
   //   socket.emit("/req", {
   //     playing: false,
-  //     played: (newValue as number  / 100) * duration,
+  //     played: currentTime - 10,
   //   });
-
-  //   videoStore.setVideoState(false);
   // };
 
   const handleSetUserReady = (ready: boolean) => {
@@ -119,8 +126,6 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
   const handleKeyDown = (e: KeyboardEvent<HTMLImageElement>) => {
     if (!e || (e && e.key === "Enter" && !e.shiftKey)) {
-      console.log(chat);
-
       socket.emit("/chat", { chat });
       setChat("");
     }
@@ -134,6 +139,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         console.log("connected successfully to socket");
       });
 
+      // getting noticed when someone has changed video playing time or playing state.
       socket.on("/sync", (data) => {
         if (data?.playing !== undefined) {
           videoStore.setVideoState(data.playing);
@@ -141,38 +147,37 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         if (data?.played !== undefined) {
           videoStore.setVideoPlayed(data.played);
           playerRef.current?.seekTo(data.played);
+          setEventStartTime(new Date());
           if (duration) setPlayedSecs(+data.played * duration);
         }
       });
 
-      socket.on("/left-user", (data) => {
-        console.log(data);
-        // setUsers((prev) => [...prev, { str: data }]);
-      });
-
+      // notify users when someone joined to the room to send current video playing time.
       socket.on("/join-user", (data) => {
-        // setUsers((prev) => [...prev, { str: data }]);
-
+        console.log(videoStore.played, "/join-user");
         socket.emit("/req", {
           playing: videoStore.playing,
           played: videoStore.played,
         });
       });
 
+      // get users list
+      socket.on("/users", (data) => {
+        setUsers(data);
+      });
+
+      // getting room video url
       socket.on("/get-video", (data) => {
         videoStore.setVideoUrl(data.url);
         setUrl(data.url);
       });
 
-      socket.on("/users", (data) => {
-        setUsers(data);
-        //  get users last update list
-      });
-
+      // getting room chats
       socket.on("/chats", (data) => {
         setChatsList(data);
       });
 
+      // getting room info
       socket.on("/room", (data) => {
         setRoomType(data.type);
       });
@@ -183,33 +188,34 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       }
     }
 
-    // return () => {
-    //   socket.disconnect();
-    //   alert("hey")
-    //   videoStore.setVideoUrl("");
-    //   videoStore.setVideoPlayed(0);
-    //   videoStore.setVideoState(false);
-    //   videoStore.setPlayerIsReady(false);
-    // };
+    return () => {
+      socket.disconnect();
+      videoStore.setVideoUrl("");
+      videoStore.setVideoPlayed(0);
+      videoStore.setVideoState(false);
+      videoStore.setPlayerIsReady(false);
+    };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (videoStore.playing) {
-      socket.emit("/req", {
-        playing: videoStore.playing,
-        played: videoStore.played,
-      });
-    }
+  // useEffect(() => {
+  //   if (videoStore.playing) {
+  //     socket.emit("/req", {
+  //       playing: videoStore.playing,
+  //       played: videoStore.played,
+  //     });
+  //   }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoStore.playing]);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [videoStore.playing]);
 
   useEffect(() => {
     if (duration) setPlayedSecs(+videoStore.played * duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
+
+  // console.log(eventStartTime, "eventStartTime" , isPlayerReady);
 
   useEffect(() => {
     const isBuffering = videoStore.playerCurrentState === "buffering";
@@ -217,16 +223,30 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
     if (isPlayerReady && internalVideoPlayer && !isBuffering) {
       playerRef.current?.seekTo(videoStore.played);
-      // videoStore.setPlayerIsReady(false);
       setIsPlayerReady(false);
     }
   });
+
+  // useEffect(() => {
+  //   if (isPlayerReady && eventStartTime) {
+  //     const currentTime = new Date();
+  //     const diff = ((currentTime.getTime() - eventStartTime.getTime()) / 1000 / duration);
+  //     videoStore.setVideoPlayed(videoStore.played + diff);
+  //     playerRef.current?.seekTo(videoStore.played + diff);
+  //     setEventStartTime(null);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [isPlayerReady, eventStartTime]);
+
+
+  
 
   return (
     <div className={styles.session}>
       <div className={styles.content}>
         <div className={styles.video}>
           <ReactPlayer
+          style={{pointerEvents : "none"}}
             ref={playerRef}
             url={videoStore.url}
             width={"100%"}
@@ -234,41 +254,22 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             volume={1}
             muted={isMuted}
             onPlay={() => {
-              if (!videoStore.playing) {
-                const test: any = playerRef.current;
-                console.log(test?.player.handlePause);
-              }
               videoStore.setVideoState(true);
               videoStore.setPlayerCurrentState("playing");
-              // if (socket) socket.emit("/status", { status: "playing" });
             }}
             onPause={() => {
               videoStore.setVideoState(false);
               videoStore.setPlayerCurrentState("paused");
-              // if (socket) socket.emit("/status", { status: "paused" });
             }}
-            // onSeek={(time: number) => {
-            //   console.log(time);
-            // }}
             onBuffer={() => {
               videoStore.setPlayerCurrentState("buffering");
-              // if (socket) socket.emit("/status", { status: "buffering" });
             }}
             playing={videoStore.playing}
             onProgress={(progress) => {
               if (!seeking) {
                 videoStore.setVideoPlayed(progress.played);
                 setPlayedSecs(progress.playedSeconds);
-
-                // if (
-                //   +progress.playedSeconds.toFixed(0) > 0 &&
-                //   +progress.playedSeconds.toFixed(0) % 5 === 0
-                // ) {
-                //   socket.emit("/req", {
-                //     playing: videoStore.playing,
-                //     played: videoStore.played,
-                //   });
-                // }
+                console.log(progress.played, "in progress callback");
               }
             }}
             onDuration={(d) => {
@@ -276,6 +277,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
             }}
             onReady={(p) => {
               setIsPlayerReady(true);
+              console.log("ready");
             }}
             config={{
               youtube: {
@@ -305,17 +307,11 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               onChange={handleSeekChange}
               onMouseUp={handleSeekMouseUp}
             />
-            {/* <Slider
-              style={{ margin: "0 16px" }}
-              value={(videoStore.played / duration) * 100}
-              onChange={handleSliderChange}
-              onMouseDown={handleSeekMouseDown}
-              onMouseUp={handleSeekMouseUp}
-            /> */}
-            {/* <button onClick={handleSkipBackward}>Skip Backward</button>
-            <button onClick={handleSkipForward}>Skip Forward</button> */}
             <IconButton className={styles.mute_btn} onClick={() => setIsMuted(!isMuted)}>
               {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+            </IconButton>
+            <IconButton className={styles.forward_btn} onClick={handleSkipForward}>
+              <FastForwardIcon />
             </IconButton>
           </div>
 
@@ -328,10 +324,18 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
         <div className={styles.box}>
           <div className={styles.box__content}>
             <div className={styles.box_header}>
-              <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("users")}>
+              <Button
+                data-active={boxCurrentTab === "users"}
+                className={styles.tab_button}
+                onClick={() => setBoxCurrentTab("users")}
+              >
                 Users
               </Button>
-              <Button className={styles.tab_button} onClick={() => setBoxCurrentTab("chats")}>
+              <Button
+                data-active={boxCurrentTab === "chats"}
+                className={styles.tab_button}
+                onClick={() => setBoxCurrentTab("chats")}
+              >
                 Chats
               </Button>
             </div>
@@ -373,7 +377,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
             <div className={styles.url_box__input}>
               <TextField
-                style={{ margin: "8px 0", width: matches ? 230 : 400 }}
+                style={{ margin: "8px 0", width: matches ? "100%" : 400 }}
                 id="outlined-basic"
                 label="URL"
                 variant="outlined"
@@ -423,7 +427,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
           <div className={styles.invite_link_box__input}>
             <TextField
-              style={{ margin: "8px 0", width: matches ? 300 : 400 }}
+              style={{ margin: "8px 0", width: matches ? "100%" : 400 }}
               id="outlined-basic"
               label="Invite Link  "
               variant="outlined"
@@ -437,7 +441,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
           )}
         </div>
 
-        {/* {matches && (
+        {matches && (
           <div className={styles.get_ready_box}>
             <Button
               color="inherit"
@@ -448,7 +452,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               {videoStore.isReady ? "unready" : "ready"}
             </Button>
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );

@@ -39,8 +39,8 @@ export async function setup() {
     const roomID: string = socket.handshake.query.id;
     const token: string = socket.handshake.auth.token;
     const user: IJWTUser = getUser(token);
+    
 
-    // const userId = user ? user.id : socket.id;
     const userName = user?.name || "";
     const room = roomManager.rooms.find((r) => r._id === roomID);
 
@@ -58,7 +58,6 @@ export async function setup() {
 
       const users = room?.users
         ? room.users
-            // .filter((allUsers) => allUsers.socket.id !== socket.id)
             .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state }))
         : [];
 
@@ -113,7 +112,6 @@ export async function setup() {
       socket.broadcast.to(roomID).emit("/left-user", `${userName} left the room`);
       const users = room?.users
         ? room.users
-            // .filter((allUsers) => allUsers.socket.id !== socket.id)
             .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state }))
         : [];
       socket.emit("/users", users);
