@@ -14,7 +14,7 @@ function Main() {
       <main style={{paddingTop : 80}}>
         <Routes>
           <Route path={"/"} element={<Home auth={AuthStore} />} />
-          <Route path={"/session/:id"} element={<Session videoStore={VideoInfosStore} />} />
+          <Route path={"/session/:id"} element={<Session videoStore={VideoInfosStore} auth={AuthStore} />} />
           <Route path={"/rooms"} element={<Rooms />} />
           <Route path={"/youtube-search"} element={<YouTube videoStore={VideoInfosStore} />} />
         </Routes>

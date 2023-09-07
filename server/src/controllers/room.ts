@@ -123,7 +123,7 @@ export const createRoom = async (req, res) => {
       name,
       title,
       type,
-      adminId: "",
+      adminId: req.user.id,
       // users: [{ id: req.user.id }],
       users : [],
       chats : []

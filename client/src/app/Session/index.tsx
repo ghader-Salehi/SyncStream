@@ -9,8 +9,10 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import FastForwardIcon from '@mui/icons-material/FastForward';
-
+import FastForwardIcon from "@mui/icons-material/FastForward";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Tooltip from "@mui/material/Tooltip";
+import CommentsDisabledIcon from "@mui/icons-material/CommentsDisabled";
 import { Button, IconButton, TextField } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
@@ -18,9 +20,11 @@ import styles from "./styles.module.scss";
 import { connectToSocket } from "api/socket";
 import { VideoInfos } from "mobx/videoStore";
 import Chats, { Chat } from "./components/Chats";
+import { AuthInfo } from "mobx/authStore";
 
 interface SessionProps {
   videoStore: VideoInfos;
+  auth: AuthInfo;
 }
 
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
@@ -44,7 +48,7 @@ const formatProgressString = (amountOfSeconds: number) => {
   return hours + ":" + minutes + ":" + seconds;
 };
 
-const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
+const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth }) => {
   const { id } = useParams();
   const [url, setUrl] = useState(videoStore.url);
   const [seeking, setSeeking] = useState(false);
@@ -58,9 +62,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   const [chatsList, setChatsList] = useState<Chat[]>([]);
   const [roomType, setRoomType] = useState("");
   const matches = useMediaQuery("(max-width:992px)");
+  const [adminId, setAdminId] = useState("");
 
   const playerRef = useRef<ReactPlayer | null>(null);
   const [eventStartTime, setEventStartTime] = useState<Date | null>(null);
+
+  const isUserAdmin = auth.user?.id === adminId;
 
   const handleSeekMouseDown = () => {
     setSeeking(true);
@@ -104,8 +111,9 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       playing: false,
       played: currentTime + 10,
     });
-
   };
+
+  const handleClearAllChats = () => {};
 
   // const handleRewind = () => {
   //   const currentTime = playerRef.current?.getCurrentTime() || 0;
@@ -130,6 +138,21 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       setChat("");
     }
   };
+
+  const renderToolBar = (
+    <div className={styles.box__chat_input__toolbar}>
+      <Tooltip className={styles.disable_chats} title="Disable Comments">
+        <IconButton className={styles.forward_btn} onClick={() => {}}>
+          <CommentsDisabledIcon />
+        </IconButton>
+      </Tooltip>
+      <Tooltip className={styles.clear_chats} title="Delete All Chats">
+        <IconButton className={styles.forward_btn} onClick={() => {}}>
+          <DeleteIcon />
+        </IconButton>
+      </Tooltip>
+    </div>
+  );
 
   useEffect(() => {
     if (id) {
@@ -164,6 +187,8 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       // get users list
       socket.on("/users", (data) => {
         setUsers(data);
+        console.log(data);
+        
       });
 
       // getting room video url
@@ -180,6 +205,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
       // getting room info
       socket.on("/room", (data) => {
         setRoomType(data.type);
+        setAdminId(data.adminId);
       });
 
       // send video url to server when selecting a video from list to watching it in sync
@@ -198,17 +224,6 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // useEffect(() => {
-  //   if (videoStore.playing) {
-  //     socket.emit("/req", {
-  //       playing: videoStore.playing,
-  //       played: videoStore.played,
-  //     });
-  //   }
-
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [videoStore.playing]);
 
   useEffect(() => {
     if (duration) setPlayedSecs(+videoStore.played * duration);
@@ -238,15 +253,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [isPlayerReady, eventStartTime]);
 
-
-  
-
   return (
     <div className={styles.session}>
       <div className={styles.content}>
         <div className={styles.video}>
           <ReactPlayer
-          style={{pointerEvents : "none"}}
+            style={{ pointerEvents: "none" }}
             ref={playerRef}
             url={videoStore.url}
             width={"100%"}
@@ -344,7 +356,10 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
               <div className={styles.users_list}>
                 {users.map((u) => (
                   <div className={styles.user}>
-                    <span className={styles.user__name}> {u.name} :</span>
+                    <span className={styles.user__name}>
+                      {" "}
+                      {u.name} {u.isAdmin && "(admin)"} :
+                    </span>
                     <span data-ready={u.status === "ready"} className={styles.user__status}>
                       ({u.status.toUpperCase()})
                     </span>
@@ -357,6 +372,8 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore }) => {
           </div>
           {boxCurrentTab === "chats" && (
             <div className={styles.box__chat_input}>
+              {isUserAdmin && renderToolBar}
+
               <TextField
                 style={{ margin: "8px 0", width: "100%", backgroundColor: "#fff" }}
                 id="outlined-basic"

@@ -58,13 +58,13 @@ export async function setup() {
 
       const users = room?.users
         ? room.users
-            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state }))
+            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state , isAdmin : u.id === room.adminId }))
         : [];
 
       socket.emit("/users", users);
       socket.broadcast.to(roomID).emit("/users", users);
 
-      if (room?.type) socket.emit("/room", { type: room.type });
+      if (room?.type) socket.emit("/room", { type: room.type , adminId : room.adminId });
       if (room?.info) socket.emit("/sync", room.info);
       if (room?.videoUrl) socket.emit("/get-video", { url: room.videoUrl });
       if (room?.chats) socket.emit("/chats", room?.chats);
@@ -88,7 +88,7 @@ export async function setup() {
       const users = updatedRoom?.users
         ? updatedRoom.users
             // .filter((allUsers) => allUsers.socket.id !== socket.id)
-            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state }))
+            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state , isAdmin : u.id === room.adminId }))
         : [];
 
       socket.emit("/users", users);
@@ -112,7 +112,7 @@ export async function setup() {
       socket.broadcast.to(roomID).emit("/left-user", `${userName} left the room`);
       const users = room?.users
         ? room.users
-            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state }))
+            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state, isAdmin : u.id === room.adminId }))
         : [];
       socket.emit("/users", users);
       socket.broadcast.to(roomID).emit("/users", users);

@@ -58,7 +58,8 @@
           cursor: pointer;
         }
 
-        .mute_btn, .forward_btn {
+        .mute_btn,
+        .forward_btn {
           color: #fff;
         }
       }
@@ -101,7 +102,7 @@
             font-weight: bold;
             width: 50%;
 
-            &[data-active='true']{
+            &[data-active="true"] {
               background-color: rgb(168, 168, 168);
             }
           }
@@ -141,7 +142,21 @@
 
       .box__chat_input {
         display: flex;
+        flex-direction: column;
         width: 100%;
+
+        .box__chat_input__toolbar {
+          display: flex;
+          align-items: center;
+
+          .clear_chats {
+            // margin-right: auto;
+          }
+
+          .disable_chats {
+            margin-right: auto;
+          }
+        }
       }
     }
   }

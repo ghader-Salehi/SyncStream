@@ -3,7 +3,7 @@ import { makeObservable, observable, action } from "mobx";
 interface IUser {
   name: string;
   email: string;
-  password: string;
+  id: string;
 }
 export class AuthInfo {
   token: string = localStorage.getItem("ss_token") || "";

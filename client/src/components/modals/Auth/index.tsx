@@ -57,7 +57,7 @@ const LoginForm = observer(({ auth, setOpen }: ILoginForm) => {
       const userObj = {
         email: res.data.user.email,
         name: res.data.user.name,
-        password: res.data.user.password,
+        id: res.data.user.id,
       }
       auth.setUser(userObj);
       localStorage.setItem("ss_user" , JSON.stringify(userObj));
