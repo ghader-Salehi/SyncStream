@@ -39,6 +39,7 @@ interface Room {
   videoUrl: string;
   users: UserSocketConnection[];
   chats: Chat[];
+  isChatDisabled: boolean;
 }
 
 export let rooms: Room[] = [];
@@ -168,6 +169,26 @@ export function addChat(roomId: string, content: string, sender: User) {
     };
     if (rooms[foundRoomIndex]?.chats) rooms[foundRoomIndex]?.chats.push(chat);
     else rooms[foundRoomIndex].chats = [chat];
+  }
+
+  return rooms[foundRoomIndex].chats;
+}
+
+export function clearChats(roomId: string) {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomId);
+
+  if (foundRoomIndex !== -1) {
+    rooms[foundRoomIndex].chats = [];
+  }
+
+  return rooms[foundRoomIndex].chats;
+}
+
+export function disableChat(roomId: string, disabled: boolean) {
+  const foundRoomIndex = rooms.findIndex((r) => r._id === roomId);
+
+  if (foundRoomIndex !== -1) {
+    rooms[foundRoomIndex].isChatDisabled = disabled;
   }
 
   return rooms[foundRoomIndex].chats;

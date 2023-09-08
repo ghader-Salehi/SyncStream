@@ -39,7 +39,6 @@ export async function setup() {
     const roomID: string = socket.handshake.query.id;
     const token: string = socket.handshake.auth.token;
     const user: IJWTUser = getUser(token);
-    
 
     const userName = user?.name || "";
     const room = roomManager.rooms.find((r) => r._id === roomID);
@@ -57,17 +56,23 @@ export async function setup() {
       socket.broadcast.to(roomID).emit("/join-user", `${userName} joined the room`);
 
       const users = room?.users
-        ? room.users
-            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state , isAdmin : u.id === room.adminId }))
+        ? room.users.map((u) => ({
+            name: u.name,
+            email: u.email,
+            id: u.id,
+            status: u.state,
+            isAdmin: u.id === room.adminId,
+          }))
         : [];
 
       socket.emit("/users", users);
       socket.broadcast.to(roomID).emit("/users", users);
 
-      if (room?.type) socket.emit("/room", { type: room.type , adminId : room.adminId });
+      if (room?.type) socket.emit("/room", { type: room.type, adminId: room.adminId });
       if (room?.info) socket.emit("/sync", room.info);
       if (room?.videoUrl) socket.emit("/get-video", { url: room.videoUrl });
-      if (room?.chats) socket.emit("/chats", room?.chats);
+      if (room?.chats)
+        socket.emit("/chats", { chats: room?.chats, isChattingDisabled: !!room?.isChatDisabled });
     } else {
       console.log(`${userName} already added to the room`);
     }
@@ -88,7 +93,13 @@ export async function setup() {
       const users = updatedRoom?.users
         ? updatedRoom.users
             // .filter((allUsers) => allUsers.socket.id !== socket.id)
-            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state , isAdmin : u.id === room.adminId }))
+            .map((u) => ({
+              name: u.name,
+              email: u.email,
+              id: u.id,
+              status: u.state,
+              isAdmin: u.id === room.adminId,
+            }))
         : [];
 
       socket.emit("/users", users);
@@ -102,8 +113,24 @@ export async function setup() {
         email: user.email,
       });
 
-      socket.emit("/chats", chatsList);
-      socket.broadcast.to(roomID).emit("/chats", chatsList);
+      socket.emit("/chats", { chats: chatsList });
+      socket.broadcast.to(roomID).emit("/chats", { chats: chatsList });
+    });
+
+    socket.on("/clear-chat", () => {
+      const chatsList = roomManager.clearChats(roomID);
+
+      socket.emit("/chats", { chats: chatsList });
+      socket.broadcast.to(roomID).emit("/chats", { chats: chatsList });
+    });
+
+    socket.on("/disable-chat", (disabled) => {
+      const chatsList = roomManager.disableChat(roomID, disabled);
+
+      socket.emit("/chats", { chats: chatsList, isChattingDisabled: disabled });
+      socket.broadcast
+        .to(roomID)
+        .emit("/chats", { chats: chatsList, isChattingDisabled: disabled });
     });
 
     // remove user from users list
@@ -111,8 +138,13 @@ export async function setup() {
       roomManager.removeClient(roomID, socket.id);
       socket.broadcast.to(roomID).emit("/left-user", `${userName} left the room`);
       const users = room?.users
-        ? room.users
-            .map((u) => ({ name: u.name, email: u.email, id: u.id, status: u.state, isAdmin : u.id === room.adminId }))
+        ? room.users.map((u) => ({
+            name: u.name,
+            email: u.email,
+            id: u.id,
+            status: u.state,
+            isAdmin: u.id === room.adminId,
+          }))
         : [];
       socket.emit("/users", users);
       socket.broadcast.to(roomID).emit("/users", users);

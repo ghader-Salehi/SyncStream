@@ -11,6 +11,7 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InsertCommentIcon from "@mui/icons-material/InsertComment";
 import Tooltip from "@mui/material/Tooltip";
 import CommentsDisabledIcon from "@mui/icons-material/CommentsDisabled";
 import { Button, IconButton, TextField } from "@mui/material";
@@ -63,6 +64,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
   const [roomType, setRoomType] = useState("");
   const matches = useMediaQuery("(max-width:992px)");
   const [adminId, setAdminId] = useState("");
+  const [isChattingDisabled, setIsChattingDisabled] = useState(false);
 
   const playerRef = useRef<ReactPlayer | null>(null);
   const [eventStartTime, setEventStartTime] = useState<Date | null>(null);
@@ -113,7 +115,12 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
     });
   };
 
-  const handleClearAllChats = () => {};
+  const handleClearAllChats = () => {
+    socket.emit("/clear-chat");
+  };
+  const handleDisableChatting = () => {
+    socket.emit("/disable-chat", !isChattingDisabled);
+  };
 
   // const handleRewind = () => {
   //   const currentTime = playerRef.current?.getCurrentTime() || 0;
@@ -141,13 +148,22 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
 
   const renderToolBar = (
     <div className={styles.box__chat_input__toolbar}>
-      <Tooltip className={styles.disable_chats} title="Disable Comments">
-        <IconButton className={styles.forward_btn} onClick={() => {}}>
-          <CommentsDisabledIcon />
-        </IconButton>
-      </Tooltip>
-      <Tooltip className={styles.clear_chats} title="Delete All Chats">
-        <IconButton className={styles.forward_btn} onClick={() => {}}>
+      {isChattingDisabled ? (
+        <Tooltip className={styles.enable_chats} title="Enable Comments">
+          <IconButton onClick={handleDisableChatting}>
+            <InsertCommentIcon />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip className={styles.disable_chats} title="Disable Comments">
+          <IconButton className={styles.forward_btn} onClick={handleDisableChatting}>
+            <CommentsDisabledIcon />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      <Tooltip className={styles.clear_chats} title="Clear All Chats">
+        <IconButton className={styles.forward_btn} onClick={handleClearAllChats}>
           <DeleteIcon />
         </IconButton>
       </Tooltip>
@@ -187,8 +203,6 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
       // get users list
       socket.on("/users", (data) => {
         setUsers(data);
-        console.log(data);
-        
       });
 
       // getting room video url
@@ -199,7 +213,15 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
 
       // getting room chats
       socket.on("/chats", (data) => {
-        setChatsList(data);
+        console.log(data);
+
+        setChatsList(data.chats);
+
+        if (data?.isChattingDisabled) {
+          setIsChattingDisabled(data.isChattingDisabled);
+          return;
+        }
+        setIsChattingDisabled(false);
       });
 
       // getting room info
@@ -273,9 +295,6 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
               videoStore.setVideoState(false);
               videoStore.setPlayerCurrentState("paused");
             }}
-            onBuffer={() => {
-              videoStore.setPlayerCurrentState("buffering");
-            }}
             playing={videoStore.playing}
             onProgress={(progress) => {
               if (!seeking) {
@@ -289,7 +308,14 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
             }}
             onReady={(p) => {
               setIsPlayerReady(true);
-              console.log("ready");
+            }}
+
+            onBuffer={() => {
+              videoStore.setPlayerCurrentState("buffering");
+            }}
+
+            onBufferEnd={()=>{
+
             }}
             config={{
               youtube: {
@@ -382,6 +408,7 @@ const Session: FunctionComponent<SessionProps> = observer(({ videoStore, auth })
                 value={chat}
                 onChange={(e) => setChat(e.target.value)}
                 onKeyDown={handleKeyDown}
+                disabled={isChattingDisabled}
               />
             </div>
           )}

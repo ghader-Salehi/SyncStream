@@ -126,7 +126,8 @@ export const createRoom = async (req, res) => {
       adminId: req.user.id,
       // users: [{ id: req.user.id }],
       users : [],
-      chats : []
+      chats : [],
+      isChatDisabled : false
     };
 
     await redisClient.set(`room:${newRoomId.toString()}`, JSON.stringify(storingRoomInRedis));
